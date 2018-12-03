@@ -25,6 +25,7 @@ my $total-overlaps = 0;
         for $x1..$x2 -> $x {
             for $y1..$y2 -> $y {
                 my $cell := @fabric[$x;$y];
+                $cell = Array.new if ! $cell;
                 $cell.push: $c;
                 if +$cell == 2 {
                     $total-overlaps += 1;
