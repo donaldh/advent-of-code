@@ -24,12 +24,13 @@ my $total-overlaps = 0;
 
         for $x1..$x2 -> $x {
             for $y1..$y2 -> $y {
-                @fabric[$x;$y].push: $c;
-                if +@fabric[$x;$y] == 2 {
+                my $cell := @fabric[$x;$y];
+                $cell.push: $c;
+                if +$cell == 2 {
                     $total-overlaps += 1;
                 }
-                if +@fabric[$x;$y] > 1 {
-                    for @(@fabric[$x;$y]) -> $c {
+                if +$cell > 1 {
+                    for @($cell) -> $c {
                         $c.overlap = True;
                     }
                 }
