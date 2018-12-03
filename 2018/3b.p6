@@ -4,10 +4,10 @@ use v6;
 
 class Claim { has $.id; has $.x; has $.y; has $.w; has $.h; has $.overlap is rw = False; }
 
-my %claims = gather {
+my @claims = gather {
     for '3a-input.txt'.IO.lines {
         my ($id, $x, $y, $w, $h) = .match(/ '#' (\d+) \s+ '@' \s+ (\d+) ',' (\d+) ':' \s+ (\d+) 'x' (\d+) /).map: +*;
-        take $id => Claim.new(:$id, :$x, :$y, :$w, :$h);
+        take Claim.new(:$id, :$x, :$y, :$w, :$h);
     }
 }
 say "Parsed in $(now - ENTER now) seconds";
@@ -16,7 +16,7 @@ my @fabric[1000;1000];
 my $total-overlaps = 0;
 
 {
-    for %claims.values -> $c {
+    for @claims -> $c {
         my $x1 = $c.x + 1;
         my $x2 = $c.x + $c.w;
         my $y1 = $c.y + 1;
@@ -43,6 +43,6 @@ my $total-overlaps = 0;
 
 say "Total overlapping sq/in is {$total-overlaps}";
 
-for %claims.values -> $c {
+for @claims -> $c {
     say "Claim {$c.id} is intact" if ! $c.overlap;
 }
