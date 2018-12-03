@@ -27,10 +27,11 @@ my $total-overlaps = 0;
                 my $cell := @fabric[$x;$y];
                 $cell = Array.new if ! $cell;
                 $cell.push: $c;
-                if +$cell == 2 {
+                my $many := +$cell;
+                if $many == 2 {
                     $total-overlaps += 1;
                 }
-                if +$cell > 1 {
+                if $many > 1 {
                     for @($cell) -> $c {
                         $c.overlap = True;
                     }
