@@ -1,58 +1,35 @@
 #!/usr/bin/env perl6
-
 use v6;
-
-my @events = '4a-input.txt'.IO.lines.sort;
-my %guards;
 
 class Guard {
     has $.id;
     has int @.sleep[60];
     has $.fall;
 
-    method fall(Int $t) {
-        $!fall = $t;
-    }
-
-    method wake(Int $t) {
-        for $!fall..^$t -> $minute {
-            @!sleep[$minute] += 1;
-        }
-    }
-
-    method totes {
-        [+] @!sleep;
-    }
-
-    method max {
-        @!sleep.sort(-*).head;
-    }
-
-    method display {
-        say "Guard #{$!id} – { [+] @!sleep } – {@!sleep}";
-    }
+    method fall(Int $t) { $!fall = $t; }
+    method wake(Int $t) {  @!sleep[$_] += 1 for $!fall..^$t; }
+    method totes { [+] @!sleep; }
+    method max { @!sleep.max; }
+    method gist { "Guard #{$!id} – { [+] @!sleep } – {@!sleep}"; }
 
     method show {
-        my @max = @!sleep.maxpairs;
-        my $p = @max[+@max / 2];
+        my $max = @!sleep.maxpairs[0];
         say '';
-        say "Guard #{$!id} had {$p.value} sleeps in minute {$p.key}";
-        say "Giving {$!id * $p.key}";
-        say '';
+        say "Guard #{$!id} had {$max.value} sleeps in minute {$max.key}";
+        say "Giving {$!id * $max.key}";
     }
 }
 
-my $current;
-for @events -> $e {
-    my ($y, $m, $d, $hh, $mm, $act) = $e.match(
-        /'[' (\d+) '-' (\d+) '-' (\d+) \s (\d+) ':' (\d+) ']' \s (.*) /
-    ).map: ~*;
+my %guards;
 
+for '4a-input.txt'.IO.lines.sort -> $event {
+    my ($mm, $act) = $event.match(/ ':' (\d+) ']' \s (.*) /).map: ~*;
+
+    state $current;
     given $act {
         when /'Guard #' (\d+)/ {
             my $id = ~$/[0];
-            $current = %guards{$id} // Guard.new(:$id);
-            %guards{$id} = $current;
+            $current = %guards{$id} //= Guard.new(:$id);
         }
         when /'falls asleep'/ {
             $current.fall(+$mm);
@@ -63,15 +40,8 @@ for @events -> $e {
     }
 }
 
-{ # Part One
-    my @sorted = %guards.values.sort: -*.totes;
-    .display for @sorted;
-    @sorted.head.show;
-}
+# Part One
+%guards.values.max(*.totes).show;
 
-{ # Part Two
-    my @sorted = %guards.values.sort: -*.max;
-    .display for @sorted;
-    @sorted.head.show;
-}
-
+# Part Two
+%guards.values.max(*.max).show;
