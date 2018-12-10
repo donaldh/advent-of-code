@@ -2,12 +2,12 @@
 use v6;
 
 class Circular {
-    has Int $.value;
+    has int $.value;
     has $.left is rw = self;
     has $.right is rw = self;
 
-    method insert-right(Int $value) {
-        my $new = Circular.new(:$value, left => self, right => $!right);
+    method insert-right(int $value) {
+        my $new := Circular.new(:$value, left => self, right => $!right);
         $!right.left = $new;
         $!right = $new;
         $new;
@@ -21,19 +21,19 @@ class Circular {
     }
 }
 
-sub play(Int $num-players, Int $last-marble) {
+sub play(int $num-players, int $last-marble) {
     say "Playing marble mania for {$num-players} players with {$last-marble} marbles";
 
-    my @players;
+    my int @players;
     my $cur-marble = Circular.new(value => 0);
 
-    for 1..$last-marble -> $to-play {
-        my $cur-player = $to-play % $num-players;
+    for 1..$last-marble -> int $to-play {
+        my $cur-player := $to-play % $num-players;
 
         if $to-play %% 23 {
             $cur-marble .= left for ^6;
-            my $removed = $cur-marble.remove-left;
-            @players[$cur-player] += ($to-play + $removed.value);
+            my int $removed-value = $cur-marble.remove-left.value;
+            @players[$cur-player] += ($to-play + $removed-value);
         } else {
             $cur-marble .= right;
             $cur-marble = $cur-marble.insert-right($to-play);
@@ -48,6 +48,6 @@ sub play(Int $num-players, Int $last-marble) {
 # play(13, 7999);
 # play(30, 5807);
 
-my ($num-players, $last-marble) = '9-input.txt'.IO.comb(/\d+/);
-play(+$num-players, +$last-marble);
-play(+$num-players, +$last-marble * 100);
+my ($num-players, $last-marble) = '9-input.txt'.IO.comb(/\d+/)>>.Int;
+play($num-players, $last-marble);
+play($num-players, $last-marble * 100);
