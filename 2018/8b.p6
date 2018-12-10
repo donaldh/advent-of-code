@@ -2,6 +2,7 @@
 use v6;
 
 my @input = '8-input.txt'.IO.words;
+my $sum-of-meta = 0;
 
 sub node {
     my $num-children = @input.shift;
@@ -9,6 +10,7 @@ sub node {
 
     my @child-values = (node for ^$num-children);
     my @meta-values = (@input.shift for ^$num-metadata);
+    $sum-of-meta += [+] @meta-values;
 
     [+] ($num-children > 0) ?? (
         @meta-values.map(
@@ -19,4 +21,5 @@ sub node {
     !! @meta-values;
 }
 
-say node;
+my $root-value = node;
+say "Part 1 sum={$sum-of-meta}. Part 2 value={$root-value}";
