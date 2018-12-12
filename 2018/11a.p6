@@ -18,7 +18,7 @@ my int $my;
 my int $ms;
 my int $max = 0;
 
-for 1..20 -> int $size {
+sub search($size) {
     say "Checking {$size}";
     for 1..(301-$size) -> int $y {
         for 1..(301-$size) -> int $x {
@@ -40,3 +40,8 @@ for 1..20 -> int $size {
         }
     }
 }
+
+say "Part 1";
+search 3;
+say "Part 2";
+for 4..20 -> $x { search $x };
