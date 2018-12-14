@@ -1,39 +1,74 @@
 #!/usr/bin/env perl6
 use v6;
+use NCurses;
+
+my $win = initscr;
+die "Failed to initialize ncurses" unless $win.defined;
 
 my @grid[;] = '13-input.txt'.IO.lines>>.comb;
 
-enum <North East South West>;
-enum <Left Straight Right>;
+enum Dir <North East South West>;
+enum Turn <Left Straight Right>;
+my %dir-chars = North => '^', East => '>', South => 'v', West => '<';        # bogus '>'
 
 class Cart {
-    has $.dir; has $.x is rw; has $.y is rw; has $.turn is rw = Left;
+    has Dir $.dir; has $.x is rw; has $.y is rw; has Turn $.turn is rw = Left;
     method move {
+        mvaddstr $!y, $!x, @grid[$!y;$!x];
         given $!dir {
             when North {
-                given @grid[$!y;$!x-1] {
-                    when '|' {
-                        $!x -= 1;
-                    }
-                    when '\\' {
-                        $!x -= 1;
-                        $!dir = West;
-                    }
-                    when '/' {
-                        $!x -= 1;
-                        $!dir = East;
-                    }
+                $!y -= 1;
+                given @grid[$!y;$!x] {
+                    when '|' | '^' | 'v' { }
+                    when '\\' { $!dir = West; }
+                    when '/' { $!dir = East; }
                     when '+' {
+                        given $!turn { when Left { $!dir = West; }; when Right { $!dir = East; } }
+                        $!turn = Turn(($!turn + 1) % 3);
                     }
                 }
             }
             when East {
+                $!x += 1;
+                given @grid[$!y;$!x] {
+                    when '-' | '<' | '>' { }
+                    when '\\' { $!dir = South; }
+                    when '/' { $!dir = North; }
+                    when '+' {
+                        given $!turn { when Left { $!dir = North; }; when Right { $!dir = South; } }
+                        $!turn = Turn(($!turn + 1) % 3);
+                    }
+                }
             }
             when South {
+                $!y += 1;
+                given @grid[$!y;$!x] {
+                    when '|' | '^' | 'v' {
+                    }
+                    when '\\' { $!dir = East; }
+                    when '/' { $!dir = West; }
+                    when '+' {
+                        given $!turn { when Left { $!dir = East; }; when Right { $!dir = West; } }
+                        $!turn = Turn(($!turn + 1) % 3);
+                    }
+                }
             }
             when West {
+                $!x -= 1;
+                given @grid[$!y;$!x] {
+                    when '-' | '<' | '>' {
+                    }
+                    when '\\' { $!dir = North; }
+                    when '/' { $!dir = South; }
+                    when '+' {
+                        given $!turn { when Left { $!dir = South; }; when Right { $!dir = North; } }
+                        $!turn = Turn(($!turn + 1) % 3);
+                    }
+                }
             }
         }
+        mvaddstr $!y, $!x, %dir-chars{$!dir};
+        nc_refresh;
     }
 }
 
@@ -67,18 +102,25 @@ my @carts = gather {
 sub draw {
     for 0..^150 -> $y {
         for 0..^150 -> $x {
-            print @grid[$y;$x];
+            printw @grid[$y;$x];
         }
-        say '';
+        printw "\n";
     }
+    nc_refresh;
 }
 
 draw;
-exit;
 
 loop {
     for @carts.sort({ .y, .x }) -> $c {
-        move $c;
+        $c.move;
+        my @candidates = @carts.grep({ .x == $c.x && .y == $c.y });
+        if +@candidates == 2 {
+            mvaddstr 75, 70, " *** {$c.x},{$c.y} *** ";
+            nc_refresh;
+            while getch() < 0 { };
+            endwin;
+            exit;
+        }
     }
 }
-
