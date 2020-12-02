@@ -1,0 +1,52 @@
+* AoC 2020 Day 2 – Password Philosophy
+
+** Part One
+
+#+begin_quote
+To try to debug the problem, they have created a list (your puzzle input) of passwords
+(according to the corrupted database) and the corporate policy when that password was set.
+
+Each line gives the password policy and then the password. The password policy indicates the
+lowest and highest number of times a given letter must appear for the password to be valid.
+
+How many passwords are valid according to their policies?
+#+end_quote
+
+#+begin_src raku :results output
+  my @entries = '2-input.txt'.IO.lines;
+
+  say [+] @entries.map(
+      -> $entry {
+          my ($l, $h, $c, $str) = $entry.match( /(\d+) '-' (\d+) \s+ (\w) ':' \s+ (\w+)/ ).values;
+          $l <= $str.comb.Bag{~$c} <= $h
+      })
+#+end_src
+
+#+RESULTS:
+: 538
+
+** Part Two
+
+#+begin_quote
+Each policy actually describes two positions in the password, where 1 means the first character,
+2 means the second character, and so on. (Be careful; Toboggan Corporate Policies have no
+concept of "index zero"!) Exactly one of these positions must contain the given letter. Other
+occurrences of the letter are irrelevant for the purposes of policy enforcement.
+
+How many passwords are valid according to the new interpretation of the policies?
+#+end_quote
+
+
+#+begin_src raku :results output
+  my @entries = '2-input.txt'.IO.lines;
+
+  say [+] @entries.map(
+      -> $entry {
+          my ($l, $h, $c, $str) = $entry.match( /(\d+) '-' (\d+) \s+ (\w) ':' \s+ (\w+)/ ).values;
+          my @chars = $str.comb;
+          @chars[$l - 1] eq $c xor @chars[$h - 1] eq $c
+      })
+#+end_src
+
+#+RESULTS:
+: 489
