@@ -1,0 +1,118 @@
+* AoC Day 5 – Binary Boarding
+
+** Part One
+
+#+begin_quote
+Every seat also has a unique seat ID: multiply the row by 8, then add the column. In this
+example, the seat has ID 44 * 8 + 5 = 357.
+
+As a sanity check, look through your list of boarding passes. What is the highest seat ID on a
+boarding pass?
+#+end_quote
+
+For this problem, it could be helpful to encapsulate the boarding pass in a class.
+
+#+begin_src raku :results output
+  my @tickets = '5-input.txt'.IO.lines;
+
+  class Pass {
+      has $.ticket;
+      has $.row;
+      has $.column;
+
+      method seat-id {
+          $!row * 8 + $!column
+      }
+
+      method parse($ticket) {
+          my ($front, $back, $left, $right) = 0, 127, 0, 7;
+
+          for $ticket.comb -> $c {
+              given $c {
+                  when 'F' { $back = $front + (($back - $front) div 2) }
+                  when 'B' { $front = $front + (($back - $front + 1) div 2) }
+                  when 'L' { $right = $left + (($right - $left) div 2) }
+                  when 'R' { $left = $left + (($right - $left + 1) div 2) }
+              }
+          }
+
+          Pass.new(:$ticket, row => $front, column => $left);
+      }
+  }
+
+  my @passes = @tickets.map(
+      -> $t {
+          Pass.parse($t)
+      });
+
+  my @ids = @passes.map(*.seat-id);
+
+  say "Part One";
+  say @ids.max;
+
+  say "Part Two";
+  say ((@ids.min .. @ids.max).Set (-) @ids.Set).first.key;
+#+end_src
+
+#+RESULTS:
+: Part One
+: 822
+: Part Two
+: 705
+
+** Part Two
+
+#+begin_quote
+It's a completely full flight, so your seat should be the only missing boarding pass in your
+list. However, there's a catch: some of the seats at the very front and back of the plane don't
+exist on this aircraft, so they'll be missing from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will
+be in your list.
+
+What is the ID of your seat?
+#+end_quote
+
+It turns out that the solution for part one almost gives the answer for part two. All that's
+needed is to calculate the set difference between the range of parsed seat ids and the actual set
+of parsed seat ids. This will give the seat id for the missing ticket.
+
+The code for part two is included above.
+
+** Alternatives
+
+Writing a class for the Pass was not really necessary. It ended up complicating the solution
+rather than simplifying it. Here's the same logic, without defining a class and instead just
+mapping ticket string directly to seat id.
+
+#+begin_src raku :results output
+  my @tickets = '5-input.txt'.IO.lines;
+
+  my @ids = @tickets.map(
+      -> $t {
+          my ($front, $back, $left, $right) = 0, 127, 0, 7;
+
+          for $t.comb -> $c {
+              given $c {
+                  when 'F' { $back = $front + (($back - $front) div 2) }
+                  when 'B' { $front = $front + (($back - $front + 1) div 2) }
+                  when 'L' { $right = $left + (($right - $left) div 2) }
+                  when 'R' { $left = $left + (($right - $left + 1) div 2) }
+              }
+          }
+
+          $front * 8 + $left;
+      });
+
+  say "Part One";
+  say @ids.max;
+
+  say "Part Two";
+  say ((@ids.min .. @ids.max).Set (-) @ids.Set).first.key;
+#+end_src
+
+#+RESULTS:
+: Part One
+: 822
+: Part Two
+: 705
