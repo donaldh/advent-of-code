@@ -1,5 +1,11 @@
 * AoC 2020 Day 1 – Fix Your Expense Report
 
+This is a solution to Advent of Code 2020 day 1, written in Raku.
+
+https://adventofcode.com/2020/day/1
+
+** Part One
+
 #+begin_quote
 Before you leave, the Elves in accounting just need you to fix your expense report (your puzzle
 input); apparently, something isn't quite adding up.  Specifically, they need you to find the
@@ -13,15 +19,28 @@ my @values = '1-input.txt'.IO.lines;
 
 say 'Part 1';
 say [*] @values.combinations(2).grep({([+] $_) == 2020 }).head;
+#+end_src
+
+#+RESULTS:
+: Part 1
+: 181044
+
+** Part Two
+
+#+begin_quote
+In your expense report, what is the product of the three entries that sum to 2020?
+#+end_quote
+
+The solution to part two is the same as part one, using combinations of 3 values instead
+of 2.
+
+#+begin_src raku :results output
+my @values = '1-input.txt'.IO.lines;
 
 say 'Part 2';
 say [*] @values.combinations(3).grep({([+] $_) == 2020 }).head;
 #+end_src
 
 #+RESULTS:
-: Part 1
-: 181044
 : Part 2
 : 82660352
-
-

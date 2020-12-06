@@ -1,6 +1,6 @@
 * AoC Day 3 – Toboggan Trajectory
 
-This is a solution to Advent of Code 2020 day 3:
+This is a solution to Advent of Code 2020 day 3, written in Raku.
 
 https://adventofcode.com/2020/day/3
 

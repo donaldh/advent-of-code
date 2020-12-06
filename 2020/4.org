@@ -1,5 +1,9 @@
 * AoC Day 4 – Passport Processing
 
+This is a solution to Advent of Code 2020 day 4, written in Raku.
+
+https://adventofcode.com/2020/day/4
+
 ** Part One
 
 #+begin_quote

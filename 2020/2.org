@@ -1,5 +1,9 @@
 * AoC 2020 Day 2 – Password Philosophy
 
+This is a solution to Advent of Code 2020 day 2, written in Raku.
+
+https://adventofcode.com/2020/day/2
+
 ** Part One
 
 #+begin_quote
