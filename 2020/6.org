@@ -1,0 +1,51 @@
+* AoC Day 6 – Custom Customs
+
+This is a solution to Advent of Code 2020 day 6, written in Raku.
+
+https://adventofcode.com/2020/day/6
+
+** Part One
+
+#+begin_quote
+For each group, count the number of questions to which anyone answered "yes". What is the sum of
+those counts?
+#+end_quote
+
+For each group, we can use a ~Bag~ to collect answers and the number of ~Bag~ keys will the
+number of questions that have received at least one "yes" answer.
+
+#+begin_src raku :results output
+my $input = slurp '6-input.txt';
+
+my @groups = $input.split("\n\n");
+
+say [+] @groups.map(*.comb(/\w/).Bag.keys.elems)
+#+end_src
+
+#+RESULTS:
+: 6416
+
+** Part Two
+
+#+begin_quote
+For each group, count the number of questions to which everyone answered "yes". What is the sum
+of those counts?
+#+end_quote
+
+In part two we can modify the ~Bag~ approach and count the number of entries that have a value
+equal to the number of people om the group.
+
+#+begin_src raku :results output
+  my $input = slurp '6-input.txt';
+
+  my @groups = $input.split("\n\n");
+
+  say [+] @groups.map(
+      -> $g {
+          my @people = $g.lines;
+          @people.comb(/\w/).Bag.values.grep(-> $v { $v == @people.elems }).elems
+      })
+#+end_src
+
+#+RESULTS:
+: 3050
