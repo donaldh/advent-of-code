@@ -33,7 +33,7 @@ of those counts?
 #+end_quote
 
 In part two we can modify the ~Bag~ approach and count the number of entries that have a value
-equal to the number of people om the group.
+equal to the number of people in the group.
 
 #+begin_src raku :results output
   my $input = slurp '6-input.txt';
