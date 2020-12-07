@@ -14,7 +14,7 @@ How many bag colors can eventually contain at least one shiny gold bag?
           my ($colour, $contains) =  $l.match(/^
                        $<outer> = (<[\w\s]>+)
                        \s 'bags contain'
-                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? ','? \s* )+ % ', ' ]
+                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? )+ % ', ' ]
                          || ' no other bags.'
                        ] $/)<outer inner>;
           $colour => $contains.map(~*[1]).Array
@@ -48,7 +48,7 @@ How many individual bags are required inside your single shiny gold bag?
           my ($colour, $contains) =  $l.match(/^
                        $<outer> = (<[\w\s]>+)
                        \s 'bags contain'
-                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? ','? \s* )+ % ', ' ]
+                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? )+ % ', ' ]
                          || ' no other bags.'
                        ] $/)<outer inner>;
           $colour => $contains.map(-> $c { Item.new(name => ~$c[1], many => +$c[0]) }).Array
