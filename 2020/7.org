@@ -1,0 +1,68 @@
+* AoC Day 7 – Handy Haversacks
+
+** Part One
+
+#+begin_quote
+How many bag colors can eventually contain at least one shiny gold bag?
+#+end_quote
+
+#+begin_src raku :results output :tangle 7a.raku :shebang "#!/usr/bin/env raku"
+  my @lines = '7-input.txt'.IO.lines;
+
+  my %rules = @lines.map(
+      -> $l {
+          my ($colour, $contains) =  $l.match(/^
+                       $<outer> = (<[\w\s]>+)
+                       \s 'bags contain'
+                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? ','? \s* )+ % ', ' ]
+                         || ' no other bags.'
+                       ] $/)<outer inner>;
+          $colour => $contains.map(~*[1]).Array
+      });
+
+  sub can-contain($outer, $what) {
+      my @names = flat %rules{$outer};
+      @names.grep( -> $n { $n eq $what or can-contain($n, $what) }).elems > 0;
+  }
+
+  say +%rules.keys.grep(-> $n { can-contain($n, 'shiny gold') })
+#+end_src
+
+#+RESULTS:
+: 289
+
+** Part Two
+
+#+begin_quote
+How many individual bags are required inside your single shiny gold bag?
+#+end_quote
+
+
+#+begin_src raku :results output :tangle 7b.raku :shebang "#!/usr/bin/env raku"
+  my @lines = '7-input.txt'.IO.lines;
+
+  class Item { has $.name; has $.many; }
+
+  my %rules = @lines.map(
+      -> $l {
+          my ($colour, $contains) =  $l.match(/^
+                       $<outer> = (<[\w\s]>+)
+                       \s 'bags contain'
+                       [ [ \s ~ '.' $<inner> = ( (\d+) \s (<[\w\s]>+) ' bag' 's'? ','? \s* )+ % ', ' ]
+                         || ' no other bags.'
+                       ] $/)<outer inner>;
+          $colour => $contains.map(-> $c { Item.new(name => ~$c[1], many => +$c[0]) }).Array
+      });
+
+  sub contains(@items) {
+      [+] @items.map(
+          -> $i {
+              $i.many + $i.many * contains(%rules{$i.name})
+          })
+  }
+
+  say contains(%rules{'shiny gold'})
+#+end_src
+
+#+RESULTS:
+: 30055
