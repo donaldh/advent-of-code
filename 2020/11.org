@@ -24,6 +24,8 @@ state. How many seats end up occupied?
 
 *** Raku
 
+
+
 #+begin_src raku :results output :tangle 11.raku :shebang "#!/usr/bin/env raku"
   my @plan[97;98] = '11-input.txt'.IO.lines.map(*.comb);
   my @new[97;98];

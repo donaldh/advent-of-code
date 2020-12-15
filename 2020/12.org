@@ -24,6 +24,9 @@ location and the ship's starting position?
 
 *** Raku
 
+This solution in Raku just uses an instruction loop to sequence through the input, maintaining
+position state along the way. 
+
 #+begin_src raku :results output
     my @instructions = '12-input.txt'.IO.lines;
 
@@ -72,6 +75,8 @@ between that location and the ship's starting position?
 #+end_quote
 
 *** Raku
+
+Part two is just a variation with some new state for maintaining the waypoint position.
 
 #+begin_src raku :results output
   my @instructions = '12-input.txt'.IO.lines;

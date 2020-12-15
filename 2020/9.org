@@ -15,7 +15,6 @@ This is a solution to Advent of Code 2020 day 9, written in Raku.
 
 [[https://adventofcode.com/2020/day/9]]
 
-
 ** Part One
 
 #+begin_quote
@@ -25,6 +24,9 @@ first number that does not have this property?
 #+end_quote
 
 *** Raku
+
+For part one, I use a sliding window of the input array. For each iteration I take a slice and
+generate the sum of combinations to see if any match the current value.
 
 #+begin_src raku :results output
   my @numbers = '9-input.txt'.IO.lines;
@@ -52,6 +54,8 @@ What is the encryption weakness in your XMAS-encrypted list of numbers?
 #+end_quote
 
 *** Raku
+
+Part two uses a brute-force search of ever longer sequences of numbers to find a match.
 
 #+begin_src raku :results output :tangle yes :shebang "#!/usr/bin/env raku"
   my @numbers = '9-input.txt'.IO.lines.map({+$_});

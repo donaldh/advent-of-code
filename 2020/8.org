@@ -25,6 +25,9 @@ what value is in the accumulator?
 
 *** Raku
 
+This problem requires a very simple interpreter that keeps state of visited instruction
+pointers to spot an infinite loop.
+
 #+begin_src raku :results output :tangle 8.raku :shebang "#!/usr/bin/env raku"
   my @code = '8-input.txt'.IO.lines;
 
@@ -64,6 +67,8 @@ jmp). What is the value of the accumulator after the program terminates?
 #+end_quote
 
 *** Raku
+
+Part two uses a brute force search to find the statement change that allows program completion.
 
 #+begin_src raku :results output :tangle 8b.raku :shebang "#!/usr/bin/env raku"
   my @code = '8-input.txt'.IO.lines;

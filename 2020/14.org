@@ -24,6 +24,10 @@ completes?
 
 *** Raku
 
+Raku's ~given / when~ construct is ideal for alternating input lines that require different
+parsing. I quickly realised that the mask could be applied to the values as a pair of ~and~ and
+~or~ operations.
+
 #+begin_src raku :results output
   my @lines = '14-input.txt'.IO.lines;
 
@@ -55,6 +59,10 @@ Execute the initialization program using an emulator for a version 2 decoder chi
 sum of all values left in memory after it completes?
 #+end_quote
 
+*** Raku
+
+Part two is very similar, with the added step of generating all binary combinations for the
+sequence of ~X~ mask element then generating all the addresses to write into.
 
 #+begin_src raku :results output :tangle 14.raku :shebang "#!/usr/bin/env raku"
   my @lines = '14-input.txt'.IO.lines;

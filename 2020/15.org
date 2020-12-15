@@ -23,6 +23,9 @@ Given your starting numbers, what will be the 2020th number spoken?
 
 *** Raku
 
+This a quick-n-dirty solution in Raku. I nearly messed up pushing the last starting input to the
+~%seen~ list before considering it.
+
 #+begin_src raku :results output
   my @input = 2, 1, 10, 11, 0, 6;
 
@@ -56,6 +59,9 @@ Given your starting numbers, what will be the 30000000th number spoken?
 #+end_quote
 
 *** Raku
+
+The solution to part one was efficient enough that it worked for part two as well. A bit slow to
+run but manageable.
 
 #+begin_src raku :results output
   my @input = 2, 1, 10, 11, 0, 6;

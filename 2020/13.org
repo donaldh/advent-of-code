@@ -24,6 +24,10 @@ minutes you'll need to wait for that bus?
 
 *** Raku
 
+Part one can be solved by using a bit of ~div~ and multiplication to work out the next time
+after ~$earliest~ that each bus will run. Then it's just a case of sorting these future times
+and picking the first.
+
 #+begin_src raku :results output
   my @input = '13-input.txt'.IO.lines;
   my $earliest = +@input.shift;
@@ -42,13 +46,6 @@ minutes you'll need to wait for that bus?
 #+RESULTS:
 : 647 * 6 = 3882
 
-#+begin_src raku
-
-#+end_src
-
-#+RESULTS:
-: 43770
-
 
 #+begin_quote
 What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching
@@ -57,12 +54,20 @@ their positions in the list?
 
 *** Raku
 
+Part two left me fairly stumped because I knew that a brute-force search would likely run too
+long. It took a lot of clues from the reddit discussion for this problem to home in on a
+solution.
+
+0rac1e has the most concise solution for Raku that I have seen:
+
+[[https://www.reddit.com/r/adventofcode/comments/kc4njx/2020_day_13_solutions/gfvy1u0?utm_source=share&utm_medium=web2x&context=3]]
+
 #+begin_src raku :results output
+  # my @bus-ids = '7,13,x,x,59,x,31,19'.split(',');
+
   my @input = '13-input.txt'.IO.lines;
   @input.shift;
   my @bus-ids = @input.shift.split(',');
-
-  # my @bus-ids = '7,13,x,x,59,x,31,19'.split(',');
 
   my @buses = do for ^@bus-ids.elems -> $i {
       [@bus-ids[$i], (@bus-ids[$i] - $i) % @bus-ids[$i] ] if @bus-ids[$i] ne 'x'
@@ -96,9 +101,3 @@ their positions in the list?
 867295486378319
 #+end_example
 
-
-#+begin_src python
-
-buses = [(int(buses[i]
-
-#+end_src
