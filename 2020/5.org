@@ -1,8 +1,19 @@
-* AoC Day 5 – Binary Boarding
+---
+title: "AoC Day 5 – Binary Boarding"
+date: 2020-12-06
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
 This is a solution to Advent of Code 2020 day 5, written in Raku.
 
-https://adventofcode.com/2020/day/5
+<!--more-->
+
+[[https://adventofcode.com/2020/day/5]]
 
 ** Part One
 
@@ -14,7 +25,11 @@ As a sanity check, look through your list of boarding passes. What is the highes
 boarding pass?
 #+end_quote
 
-For this problem, it could be helpful to encapsulate the boarding pass in a class.
+For this problem, I chose to encapsulate the boarding pass in a class, in anticipation of a more
+challenging part two.  With brain not fully functioning, I also implemented a ticket parser using
+binary split. See later for a simpler solution.
+
+*** Raku
 
 #+begin_src raku :results output
   my @tickets = '5-input.txt'.IO.lines;
@@ -87,26 +102,14 @@ The code for part two is included above.
 
 Writing a class for the Pass was not really necessary. It ended up complicating the solution
 rather than simplifying it. Here's the same logic, without defining a class and instead just
-mapping ticket string directly to seat id.
+mapping ticket string directly to seat id. Not sure why I didn't think of that initially.
+
+*** Raku
 
 #+begin_src raku :results output
   my @tickets = '5-input.txt'.IO.lines;
 
-  my @ids = @tickets.map(
-      -> $t {
-          my ($front, $back, $left, $right) = 0, 127, 0, 7;
-
-          for $t.comb -> $c {
-              given $c {
-                  when 'F' { $back = $front + (($back - $front) div 2) }
-                  when 'B' { $front = $front + (($back - $front + 1) div 2) }
-                  when 'L' { $right = $left + (($right - $left) div 2) }
-                  when 'R' { $left = $left + (($right - $left + 1) div 2) }
-              }
-          }
-
-          $front * 8 + $left;
-      });
+  my @ids = @tickets.map(*.trans('FBLR' => '0101').parse-base(2));
 
   say "Part One";
   say @ids.max;

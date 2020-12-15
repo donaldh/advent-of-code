@@ -1,8 +1,19 @@
-* AoC 2020 Day 1 – Fix Your Expense Report
+---
+title: "AoC 2020 Day 1 – Fix Your Expense Report"
+date: 2020-12-02
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
-This is a solution to Advent of Code 2020 day 1, written in Raku.
+This is a solution to Advent of Code 2020 day 1, written in Raku and Python.
 
-https://adventofcode.com/2020/day/1
+<!--more-->
+
+[[https://adventofcode.com/2020/day/1]]
 
 ** Part One
 
@@ -14,16 +25,36 @@ two entries that sum to 2020 and then multiply those two numbers together.
 
 This problem can be solved nicely using combinations and the reduce meta operator.
 
+*** Raku
+
 #+begin_src raku :results output
 my @values = '1-input.txt'.IO.lines;
 
-say 'Part 1';
+say 'Part One';
 say [*] @values.combinations(2).grep({([+] $_) == 2020 }).head;
 #+end_src
 
 #+RESULTS:
-: Part 1
+: Part One
 : 181044
+
+*** Python
+
+#+begin_src python :results output
+from itertools import combinations
+
+input = map(lambda s: int(s), open('1-input.txt', 'r').read().splitlines())
+
+combs = list(filter(lambda p: sum(p) == 2020, combinations(input, 2)))[0]
+
+print('Part One')
+print(combs[0] * combs[1])
+#+end_src
+
+#+RESULTS:
+: Part One
+: 181044
+
 
 ** Part Two
 
@@ -34,13 +65,34 @@ In your expense report, what is the product of the three entries that sum to 202
 The solution to part two is the same as part one, using combinations of 3 values instead
 of 2.
 
+*** Raku
+
 #+begin_src raku :results output
 my @values = '1-input.txt'.IO.lines;
 
-say 'Part 2';
+say 'Part Two';
 say [*] @values.combinations(3).grep({([+] $_) == 2020 }).head;
 #+end_src
 
 #+RESULTS:
-: Part 2
+: Part Two
+: 82660352
+
+
+*** Python
+
+#+begin_src python :results output
+from itertools import combinations
+from math import prod
+
+input = map(lambda s: int(s), open('1-input.txt', 'r').read().splitlines())
+
+combs = list(filter(lambda p: sum(p) == 2020, combinations(input,3)))[0]
+
+print('Part One')
+print(prod(combs))
+#+end_src
+
+#+RESULTS:
+: Part One
 : 82660352

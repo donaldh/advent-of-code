@@ -1,8 +1,19 @@
-* AoC Day 4 – Passport Processing
+---
+title: "AoC Day 4 – Passport Processing"
+date: 2020-12-05
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
-This is a solution to Advent of Code 2020 day 4, written in Raku.
+This is a solution to Advent of Code 2020 day 4, written in Raku and Python.
 
-https://adventofcode.com/2020/day/4
+<!--more-->
+
+[[https://adventofcode.com/2020/day/4]]
 
 ** Part One
 
@@ -16,7 +27,9 @@ and a set of required keys, then rhe keys used in each passport must be a subset
 keys and a superset of the required keys.
 
 Using a functional style, we reduce the entries to a sum of those where the condition holds
-true:
+true.
+
+*** Raku
 
 #+begin_src raku :results output
   my $valid-keys = < byr iyr eyr hgt hcl ecl pid cid >.Set;
@@ -46,7 +59,9 @@ values. Continue to treat cid as optional. In your batch file, how many passport
 #+end_quote
 
 Part two of the challenge requires us to extend the solution with a validity check for each of
-the expected fields:
+the expected fields.
+
+*** Raku
 
 #+begin_src raku :results output
   my $valid-keys = < byr iyr eyr hgt hcl ecl pid cid >.Set;

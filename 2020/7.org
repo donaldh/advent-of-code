@@ -1,14 +1,27 @@
-* AoC Day 7 – Handy Haversacks
+---
+title: "AoC Day 7 – Handy Haversacks"
+date: 2020-12-08
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
 This is a solution to Advent of Code 2020 day 7, written in Raku.
 
-https://adventofcode.com/2020/day/7
+<!--more-->
+
+[[https://adventofcode.com/2020/day/7]]
 
 ** Part One
 
 #+begin_quote
 How many bag colors can eventually contain at least one shiny gold bag?
 #+end_quote
+
+*** Raku
 
 #+begin_src raku :results output :tangle 7a.raku :shebang "#!/usr/bin/env raku"
   my @lines = '7-input.txt'.IO.lines;
@@ -29,10 +42,12 @@ How many bag colors can eventually contain at least one shiny gold bag?
       @names.grep( -> $n { $n eq $what or can-contain($n, $what) }).elems > 0;
   }
 
+  say 'Part One';
   say +%rules.keys.grep(-> $n { can-contain($n, 'shiny gold') })
 #+end_src
 
 #+RESULTS:
+: Part One
 : 289
 
 ** Part Two
@@ -41,6 +56,7 @@ How many bag colors can eventually contain at least one shiny gold bag?
 How many individual bags are required inside your single shiny gold bag?
 #+end_quote
 
+*** Raku
 
 #+begin_src raku :results output :tangle 7b.raku :shebang "#!/usr/bin/env raku"
   my @lines = '7-input.txt'.IO.lines;
@@ -65,8 +81,10 @@ How many individual bags are required inside your single shiny gold bag?
           })
   }
 
+  say 'Part Two';
   say contains(%rules{'shiny gold'})
 #+end_src
 
 #+RESULTS:
+: Part Two
 : 30055

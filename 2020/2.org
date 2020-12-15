@@ -1,8 +1,19 @@
-* AoC 2020 Day 2 – Password Philosophy
+---
+title: "AoC 2020 Day 2 – Password Philosophy"
+date: 2020-12-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
-This is a solution to Advent of Code 2020 day 2, written in Raku.
+This is a solution to Advent of Code 2020 day 2, written in Raku and Python.
 
-https://adventofcode.com/2020/day/2
+<!--more-->
+
+[[https://adventofcode.com/2020/day/2]]
 
 ** Part One
 
@@ -15,6 +26,8 @@ lowest and highest number of times a given letter must appear for the password t
 
 How many passwords are valid according to their policies?
 #+end_quote
+
+*** Raku
 
 #+begin_src raku :results output
   my @entries = '2-input.txt'.IO.lines;
@@ -29,6 +42,28 @@ How many passwords are valid according to their policies?
 #+RESULTS:
 : 538
 
+*** Python
+
+#+begin_src python :results output
+  from collections import Counter
+
+  entries = open('2-input.txt', 'r').read().splitlines()
+
+  def passCheck(entry):
+      lowhigh, c, password = entry.split(' ')
+      low, high = map(lambda s: int(s), lowhigh.split('-'))
+      c = c[0]
+      return low <= Counter(password)[c] <= high
+
+  valid = filter(lambda e: passCheck(e), entries)
+
+  print(len(list(valid)))
+#+end_src
+
+#+RESULTS:
+: 538
+
+
 ** Part Two
 
 #+begin_quote
@@ -40,6 +75,7 @@ occurrences of the letter are irrelevant for the purposes of policy enforcement.
 How many passwords are valid according to the new interpretation of the policies?
 #+end_quote
 
+*** Raku
 
 #+begin_src raku :results output
   my @entries = '2-input.txt'.IO.lines;
@@ -50,6 +86,27 @@ How many passwords are valid according to the new interpretation of the policies
           my @chars = $str.comb;
           @chars[$l - 1] eq $c xor @chars[$h - 1] eq $c
       })
+#+end_src
+
+#+RESULTS:
+: 489
+
+*** Python
+
+#+begin_src python :results output
+  from collections import Counter
+
+  entries = open('2-input.txt', 'r').read().splitlines()
+
+  def passCheck(entry):
+      lowhigh, c, password = entry.split(' ')
+      low, high = map(lambda s: int(s), lowhigh.split('-'))
+      c = c[0]
+      return (password[low - 1] == c ) ^ (password[high - 1] == c)
+
+  valid = filter(lambda e: passCheck(e), entries)
+
+  print(len(list(valid)))
 #+end_src
 
 #+RESULTS:

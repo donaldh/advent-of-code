@@ -1,8 +1,19 @@
-* AoC Day 6 – Custom Customs
+---
+title: "AoC Day 6 – Custom Customs"
+date: 2020-12-07
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
 
 This is a solution to Advent of Code 2020 day 6, written in Raku.
 
-https://adventofcode.com/2020/day/6
+<!--more-->
+
+[[https://adventofcode.com/2020/day/6]]
 
 ** Part One
 
@@ -13,6 +24,8 @@ those counts?
 
 For each group, we can use a ~Bag~ to collect answers and the number of ~Bag~ keys will the
 number of questions that have received at least one "yes" answer.
+
+*** Raku
 
 #+begin_src raku :results output
 my $input = slurp '6-input.txt';
@@ -34,6 +47,8 @@ of those counts?
 
 In part two we can modify the ~Bag~ approach and count the number of entries that have a value
 equal to the number of people in the group.
+
+*** Raku
 
 #+begin_src raku :results output
   my $input = slurp '6-input.txt';
