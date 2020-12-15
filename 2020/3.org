@@ -9,7 +9,7 @@ categories:
 comments: true
 ---
 
-This is a solution to Advent of Code 2020 day 3, written in Raku.
+This is a solution to Advent of Code 2020 day 3, written in Raku and Python.
 
 <!--more-->
 
@@ -23,6 +23,11 @@ many trees would you encounter?
 #+end_quote
 
 *** Raku
+
+This solution uses modulo arithmetic to map unlimited width onto the input width. The row and
+column increments are hard-coded, not really anticipating what might come next.
+
+The answer is a sum of the mapped ~#~ trees.
 
 #+begin_src raku :results output
   my @lines = '3-input.txt'.IO.lines;
@@ -43,6 +48,8 @@ many trees would you encounter?
 
 
 *** Python
+
+This is a fairly direct translation of the Raku solution into Python.
 
 #+begin_src python :results output
 lines = open('3-input.txt', 'r').read().splitlines()
