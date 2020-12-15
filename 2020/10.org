@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 10 - Adapter Array"
+title: "AoC Day 10 – Adapter Array"
 date: 2020-12-11
 tags:
   - raku

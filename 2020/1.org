@@ -1,5 +1,5 @@
 ---
-title: "AoC 2020 Day 1 – Fix Your Expense Report"
+title: "AoC Day 1 – Fix Your Expense Report"
 date: 2020-12-02
 tags:
   - raku

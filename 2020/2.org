@@ -1,5 +1,5 @@
 ---
-title: "AoC 2020 Day 2 – Password Philosophy"
+title: "AoC Day 2 – Password Philosophy"
 date: 2020-12-03
 tags:
   - raku
