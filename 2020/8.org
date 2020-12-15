@@ -1,0 +1,101 @@
+---
+title: "AoC Day 8 – Handheld Halting"
+date: 2020-12-09
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 8, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/8]]
+
+
+** Part One
+
+#+begin_quote
+Run your copy of the boot code. Immediately before any instruction is executed a second time,
+what value is in the accumulator?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output :tangle 8.raku :shebang "#!/usr/bin/env raku"
+  my @code = '8-input.txt'.IO.lines;
+
+  my $seen = SetHash.new;
+  my $accumulator = 0;
+  my $ip = 0;
+
+  loop {
+      if $ip (elem) $seen {
+          say "Infinite loop at {$ip}";
+          say "Accumulator is {$accumulator}";
+          last;
+      }
+      $seen.set($ip);
+
+      my ($op, $arg) = @code[$ip].split(' ');
+
+      given $op {
+          when 'nop' { $ip++ }
+          when 'acc' { $accumulator += $arg; $ip++ }
+          when 'jmp' { $ip += $arg }
+      }
+  }
+
+#+end_src
+
+#+RESULTS:
+: Infinite loop at 334
+: Accumulator is 1262
+
+
+** Part Two
+
+#+begin_quote
+Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to
+jmp). What is the value of the accumulator after the program terminates?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output :tangle 8b.raku :shebang "#!/usr/bin/env raku"
+  my @code = '8-input.txt'.IO.lines;
+
+  sub run(@stmts) {
+      my $seen = SetHash.new;
+      my $accumulator = 0;
+      my $ip = 0;
+
+      loop {
+          return False if $ip (elem) $seen;
+          $seen.set($ip);
+
+          return $accumulator if $ip >= @stmts.elems;
+
+          my ($op, $arg) = @stmts[$ip].split(' ');
+
+          given $op {
+              when 'nop' { $ip++ }
+              when 'acc' { $accumulator += $arg; $ip++ }
+              when 'jmp' { $ip += $arg }
+          }
+      }
+  }
+
+  say (^@code.elems).map(
+      -> $n {
+          my @stmts = flat @code;
+          @stmts[$n] = @stmts[$n].trans('nop' => 'jmp', 'jmp' => 'nop');
+          run @stmts
+      }).grep(* > 0).first
+#+end_src
+
+#+RESULTS:
+: 1643
