@@ -1,0 +1,100 @@
+---
+title: "AoC Day 14 – Docking Data"
+date: 2020-12-15
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 14, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/14]]
+
+** Part One
+
+#+begin_quote
+Execute the initialization program. What is the sum of all values left in memory after it
+completes?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @lines = '14-input.txt'.IO.lines;
+
+  my $and;
+  my $or;
+
+  my %mem;
+
+  for @lines {
+      when /'mask = ' (\w+)/ {
+          my $mask = ~$0;
+          $and = $mask.trans('X' => '1').parse-base(2);
+          $or = $mask.trans('X' => '0').parse-base(2);
+      }
+      when /'mem[' (\d+) '] = ' (\d+)/ {
+          %mem{~$0} = (+$1) +& $and +| $or;
+      }
+  }
+
+  say [+] %mem.values;
+#+end_src
+
+#+RESULTS:
+: 15403588588538
+
+
+#+begin_quote
+Execute the initialization program using an emulator for a version 2 decoder chip. What is the
+sum of all values left in memory after it completes?
+#+end_quote
+
+
+#+begin_src raku :results output :tangle 14.raku :shebang "#!/usr/bin/env raku"
+  my @lines = '14-input.txt'.IO.lines;
+
+  my $or;
+  my @bits;
+
+  my %mem;
+
+  sub base2-word($n, $width) {
+      my $base2 = $n.base(2);
+      '0' x ($width - $base2.chars) ~ $base2
+  }
+
+  for @lines {
+      when /'mask = ' (\w+)/ {
+          my $mask = ~$0;
+          $or = $mask.trans('X' => '0').parse-base(2);
+
+          my @mask = $mask.comb;
+          @bits = (^@mask.elems).grep( -> $i { @mask[$i] eq 'X' });
+      }
+      when /'mem[' (\d+) '] = ' (\d+)/ {
+          my $addr = base2-word((+$0) +| $or, 36);
+          my $value = +$1;
+
+          for ^(2 ** @bits.elems) -> $n {
+              my $bit-values = base2-word($n, @bits.elems);
+              my @addr = $addr.comb;
+              @addr[@bits] = $bit-values.comb;
+              %mem{@addr.join} = $value;
+          }
+      }
+  }
+
+  say "{+%mem} memory locations";
+  say [+] %mem.values;
+
+#+end_src
+
+#+RESULTS:
+: 78824 memory locations
+: 3260587250457

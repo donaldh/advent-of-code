@@ -1,0 +1,104 @@
+---
+title: "AoC Day 13 – Shuttle Search"
+date: 2020-12-14
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 13, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/13]]
+
+** Part One
+
+#+begin_quote
+What is the ID of the earliest bus you can take to the airport multiplied by the number of
+minutes you'll need to wait for that bus?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @input = '13-input.txt'.IO.lines;
+  my $earliest = +@input.shift;
+  my @bus-ids = @input.shift.split(',').grep(* ne 'x').map(*.Int);
+
+  my %futures = @bus-ids.map(-> $id { $id => ($earliest div $id) * $id + $id });
+  my @times = %futures.pairs.sort({ $^a.value leg $^b.value });
+
+  my $id = @times[0].key;
+  my $diff = @times[0].value - $earliest;
+
+  say "{$id} * {$diff} = {$id * $diff}";
+
+#+end_src
+
+#+RESULTS:
+: 647 * 6 = 3882
+
+#+begin_src raku
+
+#+end_src
+
+#+RESULTS:
+: 43770
+
+
+#+begin_quote
+What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching
+their positions in the list?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @input = '13-input.txt'.IO.lines;
+  @input.shift;
+  my @bus-ids = @input.shift.split(',');
+
+  # my @bus-ids = '7,13,x,x,59,x,31,19'.split(',');
+
+  my @buses = do for ^@bus-ids.elems -> $i {
+      [@bus-ids[$i], (@bus-ids[$i] - $i) % @bus-ids[$i] ] if @bus-ids[$i] ne 'x'
+  }
+
+  say @buses;
+
+  my $result = 0;
+  my $increment = 1;
+
+  for @buses -> $bus {
+      while $result % $bus[0] != $bus[1] {
+          $result += $increment;
+      }
+      $increment *= $bus[0];
+      say $result;
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[[23 0] [41 28] [647 624] [13 11] [19 15] [29 6] [557 503] [37 14] [17 14]]
+0
+69
+535693
+4806540
+4806540
+1361105523
+700608581203
+56688479899556
+867295486378319
+#+end_example
+
+
+#+begin_src python
+
+buses = [(int(buses[i]
+
+#+end_src

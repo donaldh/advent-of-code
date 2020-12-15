@@ -1,0 +1,404 @@
+---
+title: "AoC Day 11 – Seating System"
+date: 2020-12-12
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 11, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/11]]
+
+** Part One
+
+#+begin_quote
+Simulate your seating area by applying the seating rules repeatedly until no seats change
+state. How many seats end up occupied?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output :tangle 11.raku :shebang "#!/usr/bin/env raku"
+  my @plan[97;98] = '11-input.txt'.IO.lines.map(*.comb);
+  my @new[97;98];
+
+  sub check($y, $x) {
+      if $y < 0 or $y > 96 or $x < 0 or $x > 97 {
+          return False
+      } elsif @plan[$y;$x] eq '#' {
+          return True
+      } else {
+          return False
+      }
+  }
+
+  sub check-neighbours($y, $x) {
+      (check($y-1, $x-1), check($y-1, $x), check($y-1,$x+1),
+      check($y, $x-1), check($y,$x+1),
+      check($y+1, $x-1), check($y+1, $x), check($y+1,$x+1))
+  }
+
+  sub iteration {
+      for ^97 -> $y {
+          for ^98 -> $x {
+              given @plan[$y;$x] {
+                  when '.' {
+                      @new[$y;$x] = '.'
+                  }
+                  when 'L' {
+                      if ([+] check-neighbours($y, $x)) == 0 {
+                          @new[$y;$x] = '#'
+                      } else {
+                          @new[$y;$x] = 'L'
+                      }
+                  }
+                  when '#' {
+                      if ([+] check-neighbours($y, $x)) > 3 {
+                          @new[$y;$x] = 'L'
+                      } else {
+                          @new[$y;$x] = '#'
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  sub show {
+      for ^97 -> $y {
+          for ^98 -> $x { print @new[$y;$x]; }
+          say '';
+      }
+  }
+
+  sub count {
+      my $n = 0;
+      for ^97 -> $y {
+          for ^98 -> $x { $n += (@new[$y;$x] eq '#') ?? 1 !! 0 }
+      }
+      $n;
+  }
+
+  for ^110 -> $n {
+      say "iteration {$n}";
+      iteration;
+      show;
+      if @new ~~ @plan {
+          say 'Steady state';
+          exit;
+      } else {
+          for ^97 -> $y {
+              for ^98 -> $x {
+                  @plan[$y;$x] = @new[$y;$x];
+              }
+          }
+      }
+  }
+
+  say count;
+
+#+end_src
+
+** Part Two
+
+#+begin_quote
+Given the new visibility method and the rule change for occupied seats becoming empty, once
+equilibrium is reached, how many seats end up occupied?
+#+end_quote
+
+
+*** Raku
+
+#+begin_src raku :results output :tangle 11b.raku :shebang "#!/usr/bin/env raku"
+  my @plan[97;98] = '11-input.txt'.IO.lines.map(*.comb);
+  my @new[97;98];
+
+  sub check($y, $dy, $x, $dx) {
+      my $y1 = $y + $dy; my $x1 = $x + $dx;
+      if $y1 < 0 or $y1 > 96 or $x1 < 0 or $x1 > 97 {
+          return False
+      }
+      given @plan[$y1;$x1] {
+          when '#' {
+              return True
+          }
+          when 'L' {
+              return False
+          }
+          when '.' {
+              return check($y1, $dy, $x1, $dx)
+          }
+      }
+  }
+
+  sub check-neighbours($y, $x) {
+      (check($y, -1, $x, -1), check($y, -1, $x, 0), check($y, -1, $x, +1),
+      check($y, 0, $x, -1), check($y, 0, $x, +1),
+      check($y, +1, $x, -1), check($y, +1, $x, 0), check($y, +1,$x, +1))
+  }
+
+  sub iteration {
+      for ^97 -> $y {
+          for ^98 -> $x {
+              given @plan[$y;$x] {
+                  when '.' {
+                      @new[$y;$x] = '.'
+                  }
+                  when 'L' {
+                      if ([+] check-neighbours($y, $x)) == 0 {
+                          @new[$y;$x] = '#'
+                      } else {
+                          @new[$y;$x] = 'L'
+                      }
+                  }
+                  when '#' {
+                      if ([+] check-neighbours($y, $x)) > 4 {
+                          @new[$y;$x] = 'L'
+                      } else {
+                          @new[$y;$x] = '#'
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  sub show {
+      my $n = 0;
+      for ^97 -> $y {
+          for ^98 -> $x {
+              $n += (@new[$y;$x] eq '#') ?? 1 !! 0;
+              #print @new[$y;$x];
+          }
+          #say '';
+      }
+      say $n;
+  }
+
+  for ^100 -> $n {
+      say "iteration {$n}";
+      iteration;
+      show;
+      if @new ~~ @plan {
+          say 'Steady state';
+          exit;
+      } else {
+          for ^97 -> $y {
+              for ^98 -> $x {
+                  @plan[$y;$x] = @new[$y;$x];
+              }
+          }
+      }
+  }
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+iteration 0
+7788
+iteration 1
+4
+iteration 2
+7776
+iteration 3
+12
+iteration 4
+7752
+iteration 5
+24
+iteration 6
+7716
+iteration 7
+41
+iteration 8
+7670
+iteration 9
+59
+iteration 10
+7614
+iteration 11
+84
+iteration 12
+7545
+iteration 13
+113
+iteration 14
+7464
+iteration 15
+143
+iteration 16
+7372
+iteration 17
+183
+iteration 18
+7262
+iteration 19
+229
+iteration 20
+7136
+iteration 21
+274
+iteration 22
+7002
+iteration 23
+327
+iteration 24
+6857
+iteration 25
+385
+iteration 26
+6704
+iteration 27
+449
+iteration 28
+6540
+iteration 29
+516
+iteration 30
+6362
+iteration 31
+579
+iteration 32
+6188
+iteration 33
+654
+iteration 34
+5987
+iteration 35
+733
+iteration 36
+5768
+iteration 37
+817
+iteration 38
+5545
+iteration 39
+902
+iteration 40
+5326
+iteration 41
+994
+iteration 42
+5085
+iteration 43
+1083
+iteration 44
+4849
+iteration 45
+1181
+iteration 46
+4605
+iteration 47
+1267
+iteration 48
+4402
+iteration 49
+1354
+iteration 50
+4188
+iteration 51
+1430
+iteration 52
+3994
+iteration 53
+1507
+iteration 54
+3819
+iteration 55
+1578
+iteration 56
+3641
+iteration 57
+1640
+iteration 58
+3482
+iteration 59
+1696
+iteration 60
+3334
+iteration 61
+1756
+iteration 62
+3195
+iteration 63
+1815
+iteration 64
+3061
+iteration 65
+1866
+iteration 66
+2929
+iteration 67
+1920
+iteration 68
+2806
+iteration 69
+1964
+iteration 70
+2700
+iteration 71
+2012
+iteration 72
+2590
+iteration 73
+2048
+iteration 74
+2496
+iteration 75
+2081
+iteration 76
+2407
+iteration 77
+2107
+iteration 78
+2346
+iteration 79
+2132
+iteration 80
+2289
+iteration 81
+2153
+iteration 82
+2247
+iteration 83
+2172
+iteration 84
+2209
+iteration 85
+2183
+iteration 86
+2192
+iteration 87
+2190
+iteration 88
+2190
+iteration 89
+2190
+iteration 90
+2190
+iteration 91
+2190
+iteration 92
+2190
+iteration 93
+2190
+iteration 94
+2190
+iteration 95
+2190
+iteration 96
+2190
+iteration 97
+2190
+iteration 98
+2190
+iteration 99
+2190
+#+end_example

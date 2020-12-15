@@ -1,0 +1,84 @@
+---
+title: "AoC Day 15 – Rambunctious Recitation"
+date: 2020-12-15T16:45:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 15, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/15]]
+
+** Part One
+
+#+begin_quote
+Given your starting numbers, what will be the 2020th number spoken?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @input = 2, 1, 10, 11, 0, 6;
+
+  my %seen;
+  my $last = @input.pop;
+
+  for ^@input.elems -> $i {
+      %seen{@input[$i]} = $i;
+  }
+
+  for @input.elems..^2019 -> $i {
+      my $new;
+      if %seen{$last}:exists {
+          $new = $i - %seen{$last};
+      } else {
+          $new = 0;
+      }
+      %seen{$last} = $i;
+      $last = $new;
+  }
+  say $last;
+#+end_src
+
+#+RESULTS:
+: 232
+
+** Part Two
+
+#+begin_quote
+Given your starting numbers, what will be the 30000000th number spoken?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @input = 2, 1, 10, 11, 0, 6;
+
+  my %seen;
+  my $last = @input.pop;
+
+  for ^@input.elems -> $i {
+      %seen{@input[$i]} = $i;
+  }
+
+  for @input.elems..^(30000000-1) -> $i {
+      my $new;
+      if %seen{$last}:exists {
+          $new = $i - %seen{$last};
+      } else {
+          $new = 0;
+      }
+      %seen{$last} = $i;
+      $last = $new;
+  }
+  say $last;
+#+end_src
+
+#+RESULTS:
+: 18929178

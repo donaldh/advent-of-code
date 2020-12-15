@@ -1,0 +1,119 @@
+---
+title: "AoC Day 12 – Rain Risk"
+date: 2020-12-13
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 12, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/12]]
+
+** Part One
+
+#+begin_quote
+Figure out where the navigation instructions lead. What is the Manhattan distance between that
+location and the ship's starting position?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+    my @instructions = '12-input.txt'.IO.lines;
+
+    my %angle = E => 90, S => 180, W => 270, N => 0;
+    my %point = 90 => 'E', 180 => 'S', 270 => 'W', 0 => 'N';
+
+    my $dir = 'E';
+
+    my ($x, $y) = 0, 0;
+
+    for @instructions -> $instruction {
+        my $action = $instruction.substr(0,1);
+        my $value = +$instruction.substr(1);
+
+        $action = $dir if $action eq 'F';
+
+        given $action {
+            when 'N' { $y += $value; }
+            when 'S' { $y -= $value; }
+            when 'E' { $x += $value; }
+            when 'W' { $x -= $value; }
+            when 'R' {
+                my $new = (%angle{$dir} + $value) % 360;
+                $dir = %point{$new};
+            }
+            when 'L' {
+                my $new = (%angle{$dir} + 360 - $value) % 360;
+                $dir = %point{$new};
+            }
+        }
+
+        # say "{$action} {$value} -> {$x}, {$y}";
+    }
+
+    say "Manhattan distance: {abs($x) + abs($y)}";
+#+end_src
+
+#+RESULTS:
+: Manhattan distance: 1589
+
+** Part Two
+
+#+begin_quote
+Figure out where the navigation instructions actually lead. What is the Manhattan distance
+between that location and the ship's starting position?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @instructions = '12-input.txt'.IO.lines;
+  #my @instructions = <F10 N3 F7 R90 F11>;
+
+  my %angle = E => 90, S => 180, W => 270, N => 0;
+  my %point = 90 => 'E', 180 => 'S', 270 => 'W', 0 => 'N';
+
+  my ($x, $y) = 0, 0;
+  my ($wx, $wy) = 10, 1;
+
+  for @instructions -> $instruction {
+      my $action = $instruction.substr(0,1);
+      my $value = +$instruction.substr(1);
+
+      given $action {
+          when 'F' { for ^$value { $x += $wx; $y += $wy } }
+          when 'N' { $wy += $value; }
+          when 'S' { $wy -= $value; }
+          when 'E' { $wx += $value; }
+          when 'W' { $wx -= $value; }
+          when 'R' {
+              for ^($value div 90) {
+                  my $tmp = $wy;
+                  $wy = -$wx;
+                  $wx = $tmp;
+              }
+          }
+          when 'L' {
+              for ^($value div 90) {
+                  my $tmp = $wx;
+                  $wx = -$wy;
+                  $wy = $tmp;
+              }
+          }
+      }
+
+      # say "{$action} {$value} : waypoint {$wx}, {$wy} -> {$x}, {$y}";
+  }
+
+  say "Manhattan distance: {abs($x) + abs($y)}";
+#+end_src
+
+#+RESULTS:
+: Manhattan distance: 23960
