@@ -1,0 +1,166 @@
+---
+title: "AoC Day 16 – Ticket Translation"
+date: 2020-12-16T15:11:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 16, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/16]]
+
+** Part 1
+
+#+begin_quote
+Consider the validity of the nearby tickets you scanned. What is your ticket scanning error
+rate?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output
+  my @lines = '16-input.txt'.IO.lines;
+
+  my @ranges;
+  my @invalid;
+  my Bool $ignore = True;
+
+  for @lines {
+      when /(\d+) '-' (\d+) ' or ' (\d+) '-' (\d+)/ {
+          @ranges.push(+$0..+$1);
+          @ranges.push(+$2..+$3);
+      }
+      when /'your ticket'/ {
+      }
+      when /'nearby tickets'/ {
+          $ignore = False;
+      }
+      when /(\d+)+ % ','/ {
+          next if $ignore;
+          my @values = $0.map(*.Int);
+
+          my @nonmembers = @values.grep(-> $v { [&&] @ranges.map( -> $r { $v !(elem) $r } ) } );
+          @invalid.append(@nonmembers);
+      }
+  }
+
+  say "Part One";
+  say [+] @invalid;
+#+end_src
+
+#+RESULTS:
+: Part One
+: 32835
+
+
+** Part Two
+
+#+begin_quote
+Once you work out which field is which, look for the six fields on your ticket that start with
+the word departure. What do you get if you multiply those six values together?
+#+end_quote
+
+*** Raku
+
+#+begin_src raku :results output :tangle 16.raku :shebang "#!/usr/bin/env raku"
+  my @lines = '16-input.txt'.IO.lines;
+
+  my @all-ranges;
+  my @invalid;
+  my Bool $mine = True;
+
+  my %rules;
+  my %rule-columns;
+  my @columns;
+
+  my @my-ticket;
+
+  for @lines {
+      when /(<[\w\s]>+) ': ' (\d+) '-' (\d+) ' or ' (\d+) '-' (\d+)/ {
+          my $rule-name = ~$0;
+          my @ranges = +$1..+$2, +$3..+$4;
+          %rules{$rule-name} = @ranges;
+          @all-ranges.append(@ranges);
+      }
+      when /'your ticket'/ {
+      }
+      when /'nearby tickets'/ {
+          $mine = False;
+      }
+      when /(\d+)+ % ','/ {
+          my @values = $0.map(*.Int);
+
+          if $mine { @my-ticket = @values; next; }
+
+          my @nonmembers = @values.grep(-> $v { [&&] @all-ranges.map( -> $r { $v !(elem) $r } ) } );
+          @invalid.append(@nonmembers);
+
+          next if +@nonmembers;
+
+          @columns[$_].push(@values[$_]) for ^+@values;
+      }
+  }
+
+  say "Part One";
+  say [+] @invalid;
+
+  say "Part Two";
+
+  my %valid-columns = do for %rules.kv -> $k, $v {
+      $k => (do for ^+@columns -> $i {
+                    $i if ([+] @columns[$i].map(
+                               -> $n {
+                                   [&&] $v.map(
+                                       -> $r {
+                                           $n !(elem) $r
+                                       }
+                                   )}
+                               )) == 0
+      })
+  }
+
+  my %column-mappings;
+
+  for %valid-columns.sort(+*.value) -> $pair {
+      say "{$pair.key} {$pair.value[0]}";
+      %column-mappings{$pair.value[0]} = $pair.key;
+      %valid-columns.values.map(*.grep(-> $n { $n != $pair.value[0] }));
+  }
+
+  say %column-mappings;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Part One
+32835
+Part Two
+price 19
+zone 8
+wagon 0
+arrival platform 0
+row 0
+arrival station 0
+departure location 0
+departure date 0
+departure station 0
+departure track 0
+departure time 0
+departure platform 0
+type 0
+route 0
+seat 0
+duration 0
+train 0
+arrival track 0
+arrival location 0
+class 0
+{0 => class, 19 => price, 8 => zone}
+#+end_example
+
