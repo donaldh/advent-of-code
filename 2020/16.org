@@ -1,6 +1,6 @@
 ---
 title: "AoC Day 16 – Ticket Translation"
-date: 2020-12-16T15:11:00
+date: 2020-12-17T15:10:00
 tags:
   - raku
 categories:
@@ -15,7 +15,7 @@ This is a solution to Advent of Code 2020 day 16, written in Raku.
 
 [[https://adventofcode.com/2020/day/16]]
 
-** Part 1
+** Part One
 
 #+begin_quote
 Consider the validity of the nearby tickets you scanned. What is your ticket scanning error
@@ -23,6 +23,12 @@ rate?
 #+end_quote
 
 *** Raku
+
+Raku ~when~ blocks are good for ad-hoc parsing where lines will be matched with different
+regular expressions. A series of ~when~ blocks acts like a switch statement with super powers.
+
+The solution for part one just requires us to gather all the ranges from the rules entries at
+the beginning of the input and then find all the values that are not an element of any range.
 
 #+begin_src raku :results output
   my @lines = '16-input.txt'.IO.lines;
@@ -67,6 +73,11 @@ the word departure. What do you get if you multiply those six values together?
 #+end_quote
 
 *** Raku
+
+Part two builds on part one so now we need to capture the complete rules. It is necessary to
+find all columns for which each rule is valid and then solve the mapping by sorting them by
+fewest matches first. The first rule only has one valid column and once it is mapped, the next
+rule only has one valid column left, and so on.
 
 #+begin_src raku :results output :tangle 16.raku :shebang "#!/usr/bin/env raku"
   my @lines = '16-input.txt'.IO.lines;
@@ -133,7 +144,6 @@ the word departure. What do you get if you multiply those six values together?
       my $value = $remaining.keys[0];
       $used.set($value);
 
-      #say "{$pair.key} {$value}";
       %column-mappings{$pair.key} = $value;
   }
 
