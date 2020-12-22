@@ -14,25 +14,29 @@ my @locations = gather {
     }
 }
 
-sub sight-lines(Point $origin) {
+sub visible(Point $origin) {
     my @relative-locations = @locations.map(
         -> $p {
             Point.new(x => $p.x - $origin.x, y => $p.y - $origin.y)
-        });
-    my $unique = @relative-locations.grep(
+        }).grep(
         -> $p {
             $p.x != 0 || $p.y != 0
-        }).map(
+        });
+    my $unique = @relative-locations.map(
         -> $p {
             my $gcd = $p.x gcd $p.y;
             "{$p.x / $gcd},{$p.y / $gcd}"
         }).Bag;
-    +$unique.keys
+    [+$unique.keys, $origin, [@relative-locations]]
 }
 
-my @visible = @locations.race.map( -> $origin { sight-lines($origin) });
-
-say @visible;
+my @visible = @locations.race.map( -> $origin { visible($origin) });
+my ($max, $location, $others) = flat @visible.max(*[0]);
 
 say "Part 1";
-say @visible.max;
+say $max;
+
+sub rads($x, $y) { my $arc = atan($y / abs($x)); $x < 0 ?? pi - $arc !! $arc }
+
+$others.flat.sort(rads(*.x, *.y), sqrt(*.x ** 2 + *.y ** 2)).say;
+
