@@ -126,41 +126,24 @@ the word departure. What do you get if you multiply those six values together?
   }
 
   my %column-mappings;
+  my SetHash $used .= new;
 
   for %valid-columns.sort(+*.value) -> $pair {
-      say "{$pair.key} {$pair.value[0]}";
-      %column-mappings{$pair.value[0]} = $pair.key;
-      %valid-columns.values.map(*.grep(-> $n { $n != $pair.value[0] }));
+      my $remaining = $pair.value.Set (-) $used;
+      my $value = $remaining.keys[0];
+      $used.set($value);
+
+      #say "{$pair.key} {$value}";
+      %column-mappings{$pair.key} = $value;
   }
 
-  say %column-mappings;
+  my @wanted = %column-mappings.keys.grep({.starts-with('departure')});
+  say [*] @my-ticket[%column-mappings{@wanted}];
 #+end_src
 
 #+RESULTS:
-#+begin_example
-Part One
-32835
-Part Two
-price 19
-zone 8
-wagon 0
-arrival platform 0
-row 0
-arrival station 0
-departure location 0
-departure date 0
-departure station 0
-departure track 0
-departure time 0
-departure platform 0
-type 0
-route 0
-seat 0
-duration 0
-train 0
-arrival track 0
-arrival location 0
-class 0
-{0 => class, 19 => price, 8 => zone}
-#+end_example
+: Part One
+: 32835
+: Part Two
+: 514662805187
 
