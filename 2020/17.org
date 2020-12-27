@@ -1,0 +1,140 @@
+---
+title: "AoC Day 17 – Conway Cubes"
+date: 2020-12-27T10:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 17, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/17]]
+
+** Part One
+
+#+begin_quote
+Starting with your given initial configuration, simulate six cycles. How many cubes are left in
+the active state after the sixth cycle?
+#+end_quote
+
+*** Raku
+
+I thought about solving this task using native arrays, but indices would need to be offset to
+accommodate negative coordinates. Instead I used a map of the active cubes, using the
+coordinates joined together as the keys. The result is a bit messy, alternating between joined
+and split coordinates. Given that I had to join and split anyway, the solution could have been a
+little cleaner if I had used Sets instead of Hashes.
+
+#+begin_src raku :results output :tangle 17a.raku :shebang "#!/usr/bin/env raku"
+  my @input = '17-input.txt'.IO.lines>>.comb;
+  my $iterations = 6;
+
+  my %cubes = @input.kv.map(
+      -> $y, @row {
+          @row.kv.map(
+              -> $x, $state {
+                  if $state eq '#' {
+                      my @value = $x, $y, 0;
+                      @value.join(':') => @value
+                  }
+              });
+      }).flat;
+
+  for ^$iterations {
+      my @neighbours = %cubes.values.map(
+          -> $cube-coords {
+              my @relative-coords = ([X] (0, 1, -1) xx 3).skip;
+              @relative-coords.map(
+                  -> $rel { $cube-coords >>+>> $rel }
+              )
+          }
+      ).flat;
+      my $neighbour-counts = @neighbours.map(*.join(':')).Bag;
+      my %active = $neighbour-counts.kv.grep(
+          -> $k, $v {
+              $v == 3 or $v == 2 && %cubes{$k}
+          }
+      ).flat;
+      %cubes = %active.keys.map( -> $k { $k => $k.split(':').Array });
+  }
+
+  say "Part One";
+  say %cubes.elems;
+#+end_src
+
+#+RESULTS:
+: Part One
+: 401
+
+** Part Two
+
+#+begin_quote
+Starting with your given initial configuration, simulate six cycles in a 4-dimensional
+space. How many cubes are left in the active state after the sixth cycle?
+#+end_quote
+
+*** Raku
+
+The solution for part two required me to refactor so that I could paramaterise the number of
+dimensions. The resulting solution for both parts is shown below.
+
+#+begin_src raku :results output :tangle 17b.raku :shebang "#!/usr/bin/env raku"
+  my @input = '17-input.txt'.IO.lines>>.comb;
+  my $iterations = 6;
+
+  sub run(@start, $dimensions) {
+      my %cubes = @start.kv.map(
+          -> $y, @row {
+              @row.kv.map(
+                  -> $x, $state {
+                      if $state eq '#' {
+                          my @value = $x, $y, |(0 xx $dimensions - 2);
+                          @value.join(':') => @value
+                      }
+                  });
+          }).flat;
+
+      for ^$iterations {
+          my @neighbours = %cubes.values.map(
+              -> $cube-coords {
+                  my @relative-coords = ([X] (0, 1, -1) xx $dimensions).skip;
+                  @relative-coords.map(
+                      -> $rel { $cube-coords >>+>> $rel }
+                  )
+              }
+          ).flat;
+          my $neighbour-counts = @neighbours.map(*.join(':')).Bag;
+          my %active = $neighbour-counts.kv.grep(
+              -> $k, $v {
+                  $v == 3 or $v == 2 && %cubes{$k}
+              }
+          ).flat;
+          %cubes = %active.keys.map( -> $k { $k => $k.split(':').Array });
+      }
+
+      return %cubes.elems;
+  }
+
+  say "Part One";
+  say run(@input, 3);
+  say "Part Two";
+  say run(@input, 4);
+#+end_src
+
+#+RESULTS:
+: Part One
+: 401
+: Part Two
+: 2224
+
+
+** Review
+
+Of the solutions shared on Reddit, I like [[https://www.reddit.com/r/adventofcode/comments/keqsfa/2020_day_17_solutions/gg7ykyv?utm_source=share&utm_medium=web2x&context=3][0rac1e's Raku solution]] the most. Their solution is
+similar to mine but much more elegant, making use of ~Tuple~ as an immutable key. I didn't know
+about ~Tuple~, written by Elizabeth Mattijsen, which is a really useful module in the ecosystem.
