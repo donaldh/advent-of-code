@@ -1,0 +1,226 @@
+---
+title: "AoC Day 19 – Monster Messages"
+date: 2020-12-28T12:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 19, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/19]]
+
+** Part One
+
+#+begin_quote
+How many messages completely match rule 0?
+#+end_quote
+
+*** Implementation
+
+#+begin_src raku :results output :tangle Day19.rakumod
+  unit module Day19;
+
+  sub evaluate(Str $input) is export {
+      my ($rules, $messages) = $input.split("\n\n");
+      my %rules = $rules.lines.map(*.split(': ')).flat;
+
+      sub make-pat($index) {
+          given %rules{$index} {
+              when /^ (\d+)+ % ' ' $/ {
+                  join(' ', do for $0 -> $r { make-pat(~$r) });
+              }
+
+              when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
+                  '( ' ~
+                  join(' ', do for $0 -> $r { make-pat(~$r) })
+                  ~ ' | ' ~
+                  join(' ', do for $1 -> $r { make-pat(~$r) })
+                  ~ ' )'
+              }
+              when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
+              default { fail "Got unexpected " ~ $_; }
+          }
+      }
+
+      my $pattern = make-pat('0');
+
+      [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
+  }
+
+#+end_src
+
+#+RESULTS:
+
+*** Test
+
+#+begin_src raku :results output
+use Test;
+use lib '.';
+use Day19;
+
+is evaluate('0: 4 1 5
+1: 2 3 | 3 2
+2: 4 4 | 5 5
+3: 4 5 | 5 4
+4: "a"
+5: "b"
+
+ababbb
+bababa
+abbbab
+aaabbb
+aaaabbb'), 2;
+
+#+end_src
+
+#+RESULTS:
+: ok 1 - 
+
+*** Answer
+
+#+begin_src raku :results output
+use lib '.';
+use Day19;
+
+my $input = slurp '19-input.txt';
+
+say "Part One";
+say evaluate($input);
+#+end_src
+
+#+RESULTS:
+: Part One
+: 226
+
+** Part Two
+
+#+begin_quote
+After updating rules 8 and 11, how many messages completely match rule 0?
+#+end_quote
+
+*** Implementation
+
+#+begin_src raku :results output :tangle Day19PartTwo.rakumod
+  unit module Day19PartTwo;
+
+  use MONKEY-SEE-NO-EVAL;
+
+  sub evaluate(Str $input) is export {
+      my ($rules, $messages) = $input.split("\n\n");
+      my %rules = $rules.lines.map(*.split(': ')).flat;
+
+      sub make-pat($index) {
+          given %rules{$index} {
+              when $index eq '8' {
+                  make-pat('42') ~ '+ '
+              }
+              when $index eq '11' {
+                  '$<left>=' ~ make-pat('42') ~ '+ $<right>=' ~ make-pat('31') ~ '+ <?{ $<left> == $<right> }>'
+              }
+              when /^ (\d+)+ % ' ' $/ {
+                  join(' ', do for $0 -> $r { make-pat(~$r) });
+              }
+
+              when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
+                  '( ' ~
+                  join(' ', do for $0 -> $r { make-pat(~$r) })
+                  ~ ' | ' ~
+                  join(' ', do for $1 -> $r { make-pat(~$r) })
+                  ~ ' )'
+              }
+              when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
+              default { fail "Got unexpected " ~ $_; }
+          }
+      }
+
+      my $pattern = make-pat('0');
+
+      [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
+  }
+
+#+end_src
+
+
+*** Test
+
+#+begin_src raku :results output
+use Test;
+use lib '.';
+use Day19PartTwo;
+
+is evaluate('42: 9 14 | 10 1
+9: 14 27 | 1 26
+10: 23 14 | 28 1
+1: "a"
+11: 42 31
+5: 1 14 | 15 1
+19: 14 1 | 14 14
+12: 24 14 | 19 1
+16: 15 1 | 14 14
+31: 14 17 | 1 13
+6: 14 14 | 1 14
+2: 1 24 | 14 4
+0: 8 11
+13: 14 3 | 1 12
+15: 1 | 14
+17: 14 2 | 1 7
+23: 25 1 | 22 14
+28: 16 1
+4: 1 1
+20: 14 14 | 1 15
+3: 5 14 | 16 1
+27: 1 6 | 14 18
+14: "b"
+21: 14 1 | 1 14
+25: 1 1 | 1 14
+22: 14 14
+8: 42
+26: 14 22 | 1 20
+18: 15 15
+7: 14 5 | 1 21
+24: 14 1
+
+abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa
+bbabbbbaabaabba
+babbbbaabbbbbabbbbbbaabaaabaaa
+aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+bbbbbbbaaaabbbbaaabbabaaa
+bbbababbbbaaaaaaaabbababaaababaabab
+ababaaaaaabaaab
+ababaaaaabbbaba
+baabbaaaabbaaaababbaababb
+abbbbabbbbaaaababbbbbbaaaababb
+aaaaabbaabaaaaababaa
+aaaabbaaaabbaaa
+aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+babaaabbbaaabaababbaabababaaab
+aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba'), 12;
+#+end_src
+
+#+RESULTS:
+: ( ( 'b' ( 'a' ( 'b' 'b' | 'a' 'b' ) | 'b' ( 'a' | 'b' ) ( 'a' | 'b' ) ) | 'a' ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' ( 'a' | 'b' ) ) ) ) 'b' | ( ( ( 'a' 'a' | 'a' 'b' ) 'a' | 'b' 'b' 'b' ) 'b' | ( ( 'a' | 'b' ) 'a' | 'b' 'b' ) 'a' 'a' ) 'a' )+  $<left>=( ( 'b' ( 'a' ( 'b' 'b' | 'a' 'b' ) | 'b' ( 'a' | 'b' ) ( 'a' | 'b' ) ) | 'a' ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' ( 'a' | 'b' ) ) ) ) 'b' | ( ( ( 'a' 'a' | 'a' 'b' ) 'a' | 'b' 'b' 'b' ) 'b' | ( ( 'a' | 'b' ) 'a' | 'b' 'b' ) 'a' 'a' ) 'a' )+ $<right>=( 'b' ( 'b' ( 'a' 'b' 'a' | 'b' 'a' 'a' ) | 'a' ( 'b' ( 'a' 'b' | ( 'a' | 'b' ) 'a' ) | 'a' ( 'b' 'a' | 'a' 'b' ) ) ) | 'a' ( 'b' ( ( 'a' 'b' | ( 'a' | 'b' ) 'a' ) 'b' | ( ( 'a' | 'b' ) 'a' | 'b' 'b' ) 'a' ) | 'a' ( 'b' 'a' 'b' | ( 'b' 'a' | 'b' 'b' ) 'a' ) ) )+ <?{ $<left> == $<right> }>
+: ok 1 - 
+
+*** Answer
+
+#+begin_src raku :results output
+use lib '.';
+use Day19PartTwo;
+
+my $input = slurp '19-input.txt';
+
+say "Part Two";
+say evaluate($input);
+#+end_src
+
+#+RESULTS:
+: Part Two
+: ( 'a' ( ( ( ( 'b' ( ( 'b' 'a' | 'a' ( 'b' | 'a' ) ) 'a' | ( 'b' 'b' | 'a' 'a' ) 'b' ) | 'a' 'b' ( 'b' 'b' | 'a' 'b' ) ) 'a' | ( ( 'b' ( 'a' 'b' | 'a' 'a' ) | 'a' ( 'b' 'a' | 'a' 'b' ) ) 'b' | ( ( 'b' 'b' | 'a' 'b' ) 'a' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'b' ) 'a' ) 'b' ) 'b' | ( ( 'b' ( 'b' ( 'b' 'a' | 'a' 'b' ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) | 'a' ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' 'b' ) ) ) 'a' | ( 'b' ( ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' | ( 'b' 'a' | 'a' 'b' ) 'b' ) | 'a' ( 'a' 'b' 'a' | 'b' 'b' 'b' ) ) 'b' ) 'a' ) 'a' | ( 'a' ( 'a' ( ( 'b' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'a' ( 'b' 'a' | 'b' 'b' ) ) 'a' | ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' 'a' 'a' ) 'b' ) | 'b' ( 'b' ( 'a' ( 'b' 'a' | 'a' 'b' ) | 'b' 'a' 'b' ) | 'a' ( 'a' ( 'b' 'b' | 'a' 'a' ) | 'b' ( 'b' 'b' | 'a' 'b' ) ) ) ) | 'b' ( ( ( 'a' 'b' 'b' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' ) 'a' | ( 'a' ( 'b' 'b' | 'a' 'a' ) | 'b' ( 'b' 'b' | 'a' 'b' ) ) 'b' ) 'a' | ( 'b' 'a' 'a' 'b' | ( ( 'b' 'a' | 'b' 'b' ) 'a' | 'b' 'b' 'b' ) 'a' ) 'b' ) ) 'b' ) | 'b' ( ( 'a' ( 'a' ( ( ( 'b' 'a' | 'a' 'a' ) 'a' | ( 'b' 'b' | 'a' 'b' ) 'b' ) 'b' | ( ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) 'b' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' ) 'a' ) | 'b' ( 'a' ( 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) | 'b' ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' ( 'a' 'b' | 'a' 'a' ) ) ) ) | 'b' ( 'a' ( ( 'a' 'b' 'b' | 'b' ( 'b' 'b' | 'a' 'b' ) ) 'b' | ( 'b' | 'a' ) ( 'b' 'a' | 'a' 'b' ) 'a' ) | 'b' ( 'a' ( 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'b' ( 'b' 'a' | 'a' 'b' ) ) | 'b' ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' 'b' 'a' ) ) ) ) 'a' | ( 'b' ( ( 'a' ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' 'a' 'a' ) | 'b' ( 'b' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) ) 'b' | ( ( ( 'b' 'a' | 'b' 'b' ) 'a' | 'b' 'b' 'b' ) 'b' | ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' ( 'a' 'b' | 'a' 'a' ) ) 'a' ) 'a' ) | 'a' ( 'a' ( ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) 'b' | 'b' 'a' 'a' ) 'a' | 'b' ( 'a' ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) ) | 'b' ( 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) ) ) ) ) 'b' ) )+  $<left>=( 'a' ( ( ( ( 'b' ( ( 'b' 'a' | 'a' ( 'b' | 'a' ) ) 'a' | ( 'b' 'b' | 'a' 'a' ) 'b' ) | 'a' 'b' ( 'b' 'b' | 'a' 'b' ) ) 'a' | ( ( 'b' ( 'a' 'b' | 'a' 'a' ) | 'a' ( 'b' 'a' | 'a' 'b' ) ) 'b' | ( ( 'b' 'b' | 'a' 'b' ) 'a' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'b' ) 'a' ) 'b' ) 'b' | ( ( 'b' ( 'b' ( 'b' 'a' | 'a' 'b' ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) | 'a' ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' 'b' ) ) ) 'a' | ( 'b' ( ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' | ( 'b' 'a' | 'a' 'b' ) 'b' ) | 'a' ( 'a' 'b' 'a' | 'b' 'b' 'b' ) ) 'b' ) 'a' ) 'a' | ( 'a' ( 'a' ( ( 'b' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'a' ( 'b' 'a' | 'b' 'b' ) ) 'a' | ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' 'a' 'a' ) 'b' ) | 'b' ( 'b' ( 'a' ( 'b' 'a' | 'a' 'b' ) | 'b' 'a' 'b' ) | 'a' ( 'a' ( 'b' 'b' | 'a' 'a' ) | 'b' ( 'b' 'b' | 'a' 'b' ) ) ) ) | 'b' ( ( ( 'a' 'b' 'b' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' ) 'a' | ( 'a' ( 'b' 'b' | 'a' 'a' ) | 'b' ( 'b' 'b' | 'a' 'b' ) ) 'b' ) 'a' | ( 'b' 'a' 'a' 'b' | ( ( 'b' 'a' | 'b' 'b' ) 'a' | 'b' 'b' 'b' ) 'a' ) 'b' ) ) 'b' ) | 'b' ( ( 'a' ( 'a' ( ( ( 'b' 'a' | 'a' 'a' ) 'a' | ( 'b' 'b' | 'a' 'b' ) 'b' ) 'b' | ( ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) 'b' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' ) 'a' ) | 'b' ( 'a' ( 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) | 'b' ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' ( 'a' 'b' | 'a' 'a' ) ) ) ) | 'b' ( 'a' ( ( 'a' 'b' 'b' | 'b' ( 'b' 'b' | 'a' 'b' ) ) 'b' | ( 'b' | 'a' ) ( 'b' 'a' | 'a' 'b' ) 'a' ) | 'b' ( 'a' ( 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'b' ( 'b' 'a' | 'a' 'b' ) ) | 'b' ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' 'b' 'a' ) ) ) ) 'a' | ( 'b' ( ( 'a' ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' 'a' 'a' ) | 'b' ( 'b' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) ) 'b' | ( ( ( 'b' 'a' | 'b' 'b' ) 'a' | 'b' 'b' 'b' ) 'b' | ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' ( 'a' 'b' | 'a' 'a' ) ) 'a' ) 'a' ) | 'a' ( 'a' ( ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) 'b' | 'b' 'a' 'a' ) 'a' | 'b' ( 'a' ( 'b' ( 'b' 'a' | 'a' 'a' ) | 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) ) | 'b' ( 'a' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) ) ) ) ) 'b' ) )+ $<right>=( 'a' ( ( ( 'a' ( 'b' ( 'b' ( 'b' 'b' | 'a' 'a' ) | 'a' 'a' 'a' ) | 'a' ( 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'b' ( 'b' 'a' | 'a' 'a' ) ) ) | 'b' ( 'b' ( ( 'b' 'a' | 'a' 'b' ) 'a' | ( 'b' 'b' | 'a' 'b' ) 'b' ) | 'a' ( 'b' 'b' 'a' | ( 'b' 'a' | 'a' 'a' ) 'b' ) ) ) 'b' | ( ( ( 'b' 'b' 'a' | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) 'a' | ( 'a' 'b' 'a' | 'b' 'b' 'b' ) 'b' ) 'a' | ( ( 'a' 'b' 'b' | ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' ) 'a' | ( ( 'b' 'a' | 'a' ( 'b' | 'a' ) ) 'a' | ( 'b' 'b' | 'a' 'a' ) 'b' ) 'b' ) 'b' ) 'a' ) 'a' | ( ( ( 'b' ( 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) | 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) ) | 'a' ( 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'b' ( 'b' 'a' | 'b' 'b' ) ) ) 'b' | ( ( 'b' ( 'b' 'a' | 'a' ( 'b' | 'a' ) ) | 'a' 'a' 'a' ) 'b' | ( 'a' 'b' 'a' | 'b' ( 'a' 'b' | 'a' 'a' ) ) 'a' ) 'a' ) 'b' | ( ( 'b' ( 'b' ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) | 'a' 'a' 'b' ) | 'a' ( 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) | 'a' 'a' 'a' ) ) 'a' | ( ( 'b' 'a' 'a' | 'a' ( 'b' 'a' | 'b' 'b' ) ) 'b' | ( ( 'a' 'a' | ( 'b' | 'a' ) 'b' ) 'a' | ( 'b' 'a' | 'b' 'b' ) 'b' ) 'a' ) 'b' ) 'a' ) 'b' ) | 'b' ( 'a' ( ( ( ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' 'b' ) ) 'a' | ( 'b' 'b' 'a' | 'a' ( 'b' 'a' | 'a' 'a' ) ) 'b' ) 'b' | ( ( 'b' 'b' 'b' | ( 'b' 'b' | 'a' 'a' ) 'a' ) 'b' | ( 'a' 'b' 'a' | 'b' 'a' 'b' ) 'a' ) 'a' ) 'a' | ( ( 'a' ( 'a' ( 'b' 'a' | 'a' ( 'b' | 'a' ) ) | 'b' 'b' 'a' ) | 'b' ( 'b' 'b' 'a' | ( 'b' 'a' | 'a' 'a' ) 'b' ) ) 'a' | ( 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'b' 'a' 'b' ) ( 'b' | 'a' ) 'b' ) 'b' ) | 'b' ( ( ( ( 'b' ( 'a' 'b' | 'b' ( 'b' | 'a' ) ) | 'a' 'a' 'a' ) 'b' | ( 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'b' ( 'b' 'a' | 'b' 'b' ) ) 'a' ) 'b' | ( 'a' ( ( 'b' 'a' | 'a' 'a' ) 'a' | ( 'b' 'b' | 'a' 'b' ) 'b' ) | 'b' ( 'a' ( 'b' 'a' | 'a' 'b' ) | 'b' 'a' 'a' ) ) 'a' ) 'a' | ( ( ( 'a' ( 'b' | 'a' ) ( 'b' | 'a' ) | 'b' 'a' 'b' ) 'b' | ( 'b' ( 'b' 'a' | 'a' 'b' ) | 'a' ( 'b' 'a' | 'b' 'b' ) ) 'a' ) 'a' | ( ( 'b' 'b' 'b' | 'a' ( 'b' 'b' | 'a' 'b' ) ) 'a' | ( 'a' 'a' 'b' | ( 'a' 'b' | 'a' 'a' ) 'a' ) 'b' ) 'b' ) 'b' ) ) )+ <?{ $<left> == $<right> }>
+: 355
+
