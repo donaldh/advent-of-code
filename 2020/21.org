@@ -1,0 +1,103 @@
+---
+title: "AoC Day 21 – Allergen Assessment"
+date: 2020-12-30T10:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 21, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/21]]
+
+** Part One
+
+#+begin_quote
+Determine which ingredients cannot possibly contain any of the allergens in your list. How many
+times do any of those ingredients appear?
+#+end_quote
+
+The first step in solving this problem is to parse the input and build a ~Bag~ of all ingredient
+occurrences and a mapping of allergen to possible ingredients. The parsing regex uses the
+~<pattern> % <separator>~ modified quantifier to parse a space separated list of ingredients and
+a comma separated list of allergens.
+
+The solution to part one is then the sum of all ingredients that don't appear in allergen
+lists. This is calculated as the sum of remaining elements in the ~$ingredients Bag~ after all
+the allergen ingredients have been subtracted.
+
+#+begin_src raku :results output :tangle day21.raku :shebang "#!/usr/bin/env raku"
+  my @input = '21-input.txt'.IO.lines;
+
+  my $ingredients = BagHash.new;
+  my %mappings;
+  for @input {
+      when /^ (\w+)+ % ' ' ' (contains ' (\w+)+ % ', ' ')' / {
+          my @ingredients = $0>>.Str;
+          $ingredients.add(@ingredients);
+          $1>>.Str.map(-> $k { %mappings{$k}.push(@ingredients.Set) } ).sink
+      }
+      default {
+          fail "Got {$_}";
+      }
+  }
+
+  my %possible-allergens = %mappings.kv.map(
+      -> $allergen, @sets { $allergen => [(&)] @sets }
+  );
+  my $inert-ingredients = $ingredients.Set (-) ([(+)] %possible-allergens.values);
+
+  say "Part One";
+  say [+] $ingredients{$inert-ingredients.keys};
+
+#+end_src
+
+#+RESULTS:
+: Part One
+: 2211
+
+
+** Part Two
+
+#+begin_quote
+Arrange the ingredients alphabetically by their allergen and separate them by commas to produce
+your canonical dangerous ingredient list. (There should not be any spaces in your canonical
+dangerous ingredient list.) In the above example, this would be mxmxvkd,sqjhc,fvjkl.
+
+Time to stock your raft with supplies. What is your canonical dangerous ingredient list?
+#+end_quote
+
+The solution to part two is the sorted list of allergen ingredients. Each allergen can be mapped
+to a unique ingredient by successively finding those with a single potential ingredient and
+removing the ingredient from the remaining allergen lists.
+
+#+begin_src raku :results output :tangle day21.raku
+  my @matched-allergens = do while %possible-allergens {
+      my $allergen = %possible-allergens.sort(*.value.elems).first;
+
+      %possible-allergens{$allergen.key}:delete;
+      for %possible-allergens.keys -> $k {
+          %possible-allergens{$k} = %possible-allergens{$k} (-) $allergen.value
+      }
+
+      $allergen.key => $allergen.value.keys[0]
+  }
+
+  say "Part Two";
+  say @matched-allergens.sort(*.key)>>.value.join(',')
+#+end_src
+
+#+begin_src sh :results output
+./day21.raku
+#+end_src
+
+#+RESULTS:
+: Part One
+: 2211
+: Part Two
+: vv,nlxsmb,rnbhjk,bvnkk,ttxvphb,qmkz,trmzkcfg,jpvz

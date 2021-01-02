@@ -1,0 +1,87 @@
+---
+title: "AoC Day 20 – Jurassic Jigsaw"
+date: 2020-12-28T22:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 20, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/20]]
+
+** Part One
+
+#+begin_quote
+Assemble the tiles into an image. What do you get if you multiply together the IDs of the four
+corner tiles?
+#+end_quote
+
+I have chosen to use a bag of tuples to store each tile. This will allow for tile
+transformations and for taking slices of the edge coordinates to generate a numeric
+representation for each edge.
+
+In part one we need to identify the corner tiles. To do this, we can "cheat" and look for the
+tiles that have two edge values that don't match any other edge value (in normal or flipped
+orientation). This can be done by creating a bag of all edge values and then finding tiles that
+can only be adjacent to two other tiles.
+
+#+begin_src raku :results output
+  use Tuple;
+
+  my @tiles = '20-input.txt'.IO.slurp.split("\n\n");
+  say +@tiles;
+
+  class Tile {
+      has $.id;
+      has $.active;
+
+      my @edge-coords = ((0 X 0..9), (9 X 0..9), (0..9 X 0), (0..9 X 9))>>.Array;
+
+      method edge-bits {
+          @edge-coords.map(
+              -> $e {
+                  $!active{ $e.map(-> $p { tuple($p) } ) }
+              }
+          )
+      }
+
+      method edges {
+          self.edge-bits.map(*.join.parse-base(2))
+      }
+
+      method edge-variants {
+          self.edge-bits.map(*.join).map(
+              -> $e {
+                    ($e.parse-base(2), $e.flip.parse-base(2))
+              })
+      }
+  }
+
+  @tiles .= map(
+      -> $t {
+          my $id = $t.match(/\d+/).Str;
+          my @grid = $t.lines.skip>>.comb;
+          my $active = Bag.new: @grid.kv.map: -> $y, @row {
+              |@row.kv.map: -> $x, $state {
+                  tuple($x, $y) if $state eq '#'
+              }
+          }
+
+          Tile.new(:$id, :$active)
+      });
+
+  my $all-possible = @tiles.map(*.edge-variants).flat.Bag;
+
+  say [*] @tiles.grep(-> $t { $all-possible{$t.edges}.Bag{1} == 2 }).map(*.id);
+
+#+end_src
+
+#+RESULTS:
+: 145
+: 29584525501199
