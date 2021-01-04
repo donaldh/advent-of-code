@@ -1,0 +1,83 @@
+---
+title: "AoC Day 22 – Crab Combat"
+date: 2021-01-04T10:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 22, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/22]]
+
+** Part One
+
+#+begin_quote
+Play the small crab in a game of Combat using the two decks you just dealt. What is the winning
+player's score?
+#+end_quote
+
+
+#+begin_src raku :results output
+  my @players = '22-input.txt'.IO.slurp.split("\n\n");
+  my @decks = @players.map: *.trim.split("\n").skip.Array;
+
+  while [&&] @decks>>.elems {
+
+      my @draws = @decks>>.shift;
+      if [>] @draws {
+          @decks[0].append(@draws)
+      } else {
+          @decks[1].append(@draws.reverse)
+      }
+  }
+
+  say 'Part One';
+  say [+] @decks.grep(*.elems)[0].reverse.map(-> $n { $n * ++$ })
+
+#+end_src
+
+#+RESULTS:
+: Part One
+: 32629
+
+
+** Part Two – Recursive Combat
+
+#+begin_quote
+Defend your honor as Raft Captain by playing the small crab in a game of Recursive Combat using
+the same two decks as before. What is the winning player's score?
+#+end_quote
+
+
+#+begin_src raku :results output
+  my @players = '22-input.txt'.IO.slurp.split("\n\n");
+  my @decks = @players.map: *.trim.split("\n").skip.Array;
+
+  while [&&] @decks>>.elems {
+
+      my @draws = @decks>>.shift;
+      if [>] @draws {
+          @decks[0].append(@draws)
+      } else {
+          @decks[1].append(@draws.reverse)
+      }
+  }
+
+  say 'Part One';
+  say [+] @decks.grep(*.elems)[0].reverse.map(-> $n { $n * ++$ })
+
+#+end_src
+
+#+begin_src raku
+[&&] (<1 2 3>, < 4 5 8 6>)>>.elems >>>=>> (3, 5)
+#+end_src
+
+#+RESULTS:
+: False
+
