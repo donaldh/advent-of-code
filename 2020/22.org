@@ -1,6 +1,6 @@
 ---
 title: "AoC Day 22 – Crab Combat"
-date: 2021-01-04T10:00:00
+date: 2021-01-05T22:00:00
 tags:
   - raku
 categories:
@@ -22,12 +22,15 @@ Play the small crab in a game of Combat using the two decks you just dealt. What
 player's score?
 #+end_quote
 
+Part one of this Crab Combat problem was solved with a mixture of hyper and reduce operators.
+The decks parsed out as a list of lists so I just kept them that way. I think it led to a fairly
+concise solution.
 
 #+begin_src raku :results output
   my @players = '22-input.txt'.IO.slurp.split("\n\n");
   my @decks = @players.map: *.trim.split("\n").skip.Array;
 
-  while [&&] @decks>>.elems {
+  while [&&] @decks {
 
       my @draws = @decks>>.shift;
       if [>] @draws {
@@ -54,30 +57,234 @@ Defend your honor as Raft Captain by playing the small crab in a game of Recursi
 the same two decks as before. What is the winning player's score?
 #+end_quote
 
+For part two, I modified my original solution to use a recursive ~sub play~ and extended it with the
+additional logic. The check for recurring decks was implemented using a ~SetHash~ of stringified
+decks.
 
-#+begin_src raku :results output
+#+begin_src raku :results output :tangle 22.raku :shebang "#!/usr/bin/env raku"
   my @players = '22-input.txt'.IO.slurp.split("\n\n");
-  my @decks = @players.map: *.trim.split("\n").skip.Array;
+  my @decks = @players.map: *.trim.split("\n").skip>>.Int.Array;
 
-  while [&&] @decks>>.elems {
+  sub play(@decks --> Bool) {
 
-      my @draws = @decks>>.shift;
-      if [>] @draws {
-          @decks[0].append(@draws)
-      } else {
-          @decks[1].append(@draws.reverse)
+      my $previous = SetHash.new;
+
+      while [&&] @decks {
+
+          my $key = @decks>>.join(',').join('|');
+          return True if $previous{$key};
+          $previous.set($key);
+
+          my @draws = @decks>>.shift;
+
+          my Bool $one-wins = do
+          if [&&] @decks>>.elems >>>=>> @draws {
+              my @sub-decks = (@decks[0][^@draws[0]], @decks[1][^@draws[1]])>>.Array;
+              play(@sub-decks)
+          } else {
+              [>] @draws
+          }
+
+          if $one-wins {
+              @decks[0].append(@draws)
+          } else {
+              @decks[1].append(@draws.reverse)
+          }
       }
+
+      so @decks[0].elems;
   }
 
-  say 'Part One';
-  say [+] @decks.grep(*.elems)[0].reverse.map(-> $n { $n * ++$ })
+  my Bool $one-won = play(@decks);
 
-#+end_src
-
-#+begin_src raku
-[&&] (<1 2 3>, < 4 5 8 6>)>>.elems >>>=>> (3, 5)
+  say 'Part Two';
+  say [+] @decks[1 - $one-won].reverse.map(-> $n { $n * ++$ });
+  say now - ENTER now;
 #+end_src
 
 #+RESULTS:
-: False
+: Part Two
+: 32519
+: 228.86597177
 
+At nearly 4 minutes, the execution time for part two is painfully slow.
+
+*** Optimisation 1
+
+After some investigation with the Raku profiler output, there was a cost to using hyper
+operators. Below is the solution refactored to remove all hyper operators.
+
+#+begin_src raku :results output :tangle 22-opt.raku :shebang "#!/usr/bin/env raku"
+my @players = '22-input.txt'.IO.slurp.split("\n\n");
+my @decks = @players.map: *.trim.split("\n").skip>>.Int.Array;
+
+sub play(@decks --> Bool) {
+
+    my $previous = SetHash.new;
+
+    while @decks[0] && @decks[1] {
+
+        my $key = @decks.map(*.join(',')).join('|');
+        return True if $previous{$key};
+        $previous.set($key);
+
+        my $one = @decks[0].shift;
+        my $two = @decks[1].shift;
+
+        my Bool $one-wins = do
+        if @decks[0].elems >= $one and @decks[1].elems >= $two {
+            my @sub-decks = (@decks[0][^$one].Array, @decks[1][^$two].Array);
+            play(@sub-decks)
+        } else {
+            $one > $two
+        }
+
+        if $one-wins {
+            @decks[0].append($one, $two)
+        } else {
+            @decks[1].append($two, $one)
+        }
+    }
+
+    so @decks[0].elems;
+}
+
+my Bool $one-won = play(@decks);
+
+say 'Part Two';
+say [+] @decks[1 - $one-won].reverse.map(-> $n { $n * ++$ });
+say now - ENTER now;
+
+#+end_src
+
+#+RESULTS:
+: Part Two
+: 32519
+: 50.9471694
+
+With the hyper and reduce operators removed inside the loop, it runs roughly 4.5 times
+faster. This is a huge improvement but still very slow.
+
+
+*** Optimisation 2
+
+The profiler output suggests there is an accumulating cost to keeping the two players' decks in
+an array so this next refactor separates them out to distinct arrays. You could argue that this
+solution is actually more readable.
+
+#+begin_src raku :results output :tangle 22-opt2.raku :shebang "#!/usr/bin/env raku"
+my @players = '22-input.txt'.IO.slurp.split("\n\n");
+my @decks = @players.map: *.trim.split("\n").skip>>.Int;
+my @deck-one = |@decks[0];
+my @deck-two = |@decks[1];
+
+sub play(@one, @two --> Bool) {
+
+    my $previous = SetHash.new;
+
+    while @one && @two {
+
+        my $key = (@one.join(','), @two.join(',')).join('|');
+        return True if $previous{$key};
+        $previous.set($key);
+
+        my $one = @one.shift;
+        my $two = @two.shift;
+
+        my Bool $one-wins = do
+        if @one.elems >= $one and @two.elems >= $two {
+            my @sub-one = @one[^$one];
+            my @sub-two = @two[^$two];
+            play(@sub-one, @sub-two)
+        } else {
+            $one > $two
+        }
+
+        if $one-wins {
+            @one.append($one, $two)
+        } else {
+            @two.append($two, $one)
+        }
+    }
+
+    so @one.elems;
+}
+
+my Bool $one-won = play(@deck-one, @deck-two);
+
+say 'Part Two';
+say [+] ($one-won ?? @deck-one !! @deck-two).reverse.map(-> $n { $n * ++$ });
+say now - ENTER now;
+
+#+end_src
+
+#+RESULTS:
+: Part Two
+: 32519
+: 39.9653494
+
+The solution is now running nearly 6 times faster than the original. But it's still slow.
+
+*** Optimisation Three
+
+What can native int arrays do?
+
+#+begin_src raku :results output :tangle 22-opt3.raku :shebang "#!/usr/bin/env raku"
+my @players = '22-input.txt'.IO.slurp.split("\n\n");
+my @decks = @players.map: *.trim.split("\n").skip>>.Int;
+
+my int @deck-one = |@decks[0];
+my int @deck-two = |@decks[1];
+
+sub play(int @one, int @two --> Bool) {
+
+    my $previous = SetHash.new;
+
+    while @one && @two {
+
+        my $key = (@one.join(','), @two.join(',')).join('|');
+        return True if $previous{$key};
+        $previous.set($key);
+
+        my int $one = @one.shift;
+        my int $two = @two.shift;
+
+        my Bool $one-wins = do
+        if @one.elems >= $one and @two.elems >= $two {
+            my int @sub-one = @one[^$one];
+            my int @sub-two = @two[^$two];
+            play(@sub-one, @sub-two)
+        } else {
+            $one > $two
+        }
+
+        if $one-wins {
+            @one.append($one, $two)
+        } else {
+            @two.append($two, $one)
+        }
+    }
+
+    so @one.elems;
+}
+
+my Bool $one-won = play(@deck-one, @deck-two);
+
+say 'Part Two';
+say [+] ($one-won ?? @deck-one !! @deck-two).reverse.map(-> $n { $n * ++$ });
+say now - ENTER now;
+#+end_src
+
+#+RESULTS:
+: Part Two
+: 32519
+: 37.97000575
+
+Maybe marginally faster, but not significant so over several runs. I suspect the tradeoff here
+is that joining an array of native ints to produce a string key is more costly than with the
+original.
+
+*** Summary
+
+That's all the optimisation I have time for just now. It will be interesting to dig deeper into
+the performance costs and look for some gains in ~rakudo~.
