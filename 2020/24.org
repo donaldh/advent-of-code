@@ -1,0 +1,106 @@
+---
+title: "AoC Day 24 – Lobby Layout"
+date: 2021-01-06T18:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 24, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/24]]
+
+** Part One
+
+#+begin_quote
+Go through the renovation crew's list and determine which tiles they need to flip. After all of
+the instructions have been followed, how many tiles are left with the black side up?
+#+end_quote
+
+For this problem, I chose to use cube coordinates for the hexagonal grid. Each directional move
+can be translated into cartesian coordinates and each target tile is the sum of the coordinates.
+I keep a set of black tiles, adding to the set when a tile is first flipped and removing if it
+flips again, etc.
+
+#+begin_src raku :results output
+  my @input = '24-input.txt'.IO.lines;
+
+  my %movements =
+  e => (1, -1, 0), se => (0, -1, 1), sw => (-1, 0, 1),
+  w => (-1, 1, 0), nw => (0, 1, -1), ne => (1, 0, -1);
+
+  my $black = SetHash.new;
+
+  for @input {
+      my @tile = 0,0,0;
+      .comb(/'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w'/).map(
+          -> $dir { %movements{$dir} }
+      ).map( -> @delta { @tile = @tile >>+>> @delta });
+      my $t = @tile.join(',');
+      $black{$t} ?? $black.unset($t) !! $black.set($t);
+  }
+
+  say "Part one";
+  say +$black;
+#+end_src
+
+#+RESULTS:
+: Part one
+: 391
+
+
+** Part Two
+
+#+begin_quote
+How many tiles will be black after 100 days?
+#+end_quote
+
+Part two takes the output from part one and runs a Game of Life for 100 iterations. The solution
+from Day 17 can be reused, with just 6 neighbours for each grid location instead of 26
+neighbours in the original Conway Cube.
+
+
+#+begin_src raku :results output
+  my @input = '24-input.txt'.IO.lines;
+
+  my %movements =
+  e => (1, -1, 0), se => (0, -1, 1), sw => (-1, 0, 1),
+  w => (-1, 1, 0), nw => (0, 1, -1), ne => (1, 0, -1);
+  my @rel-coords = %movements.values;
+
+  my $black = SetHash.new;
+
+  for @input {
+      my @tile = 0,0,0;
+      .comb(/'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w'/).map(
+          -> $dir { %movements{$dir} }
+      ).map( -> @delta { @tile = @tile >>+>> @delta });
+      my $t = @tile.join(',');
+      $black{$t} ?? $black.unset($t) !! $black.set($t);
+  }
+
+  for ^100 {
+      my $neighbour-counts = $black.keys.map(
+          -> $tuple-str {
+              my @coords = $tuple-str.split(',');
+              @rel-coords.map( -> $rel { @coords >>+>> $rel } ).map(*.join(','))
+          }).flat.Bag;
+      my %active = $neighbour-counts.kv.grep(
+          -> $k, $v {
+              !$black{$k} && $v == 2 or $black{$k} && $v == (1|2)
+          }).flat;
+      $black = %active.keys.SetHash;
+  }
+
+  say "Part two";
+  say +$black;
+#+end_src
+
+#+RESULTS:
+: Part two
+: 3876

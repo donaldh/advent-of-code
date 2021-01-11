@@ -1,0 +1,139 @@
+---
+title: "AoC Day 23 – Crab Cups"
+date: 2021-01-06T10:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 23, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/23]]
+
+** Part One
+
+#+begin_quote
+Using your labeling, simulate 100 moves. What are the labels on the cups after cup 1?
+#+end_quote
+
+For part one of the Crab Cups game I started with a naive solution using array slices. But to
+deal with the wrapping, I ended up rotating the array to put the current position first. Still
+plenty fast enough for 100 moves.
+
+#+begin_src raku :results output :tangle 23.raku :shebang "#!/usr/bin/env raku"
+  #my @cups = '389125467'.comb>>.Int;
+  my @cups = '685974213'.comb>>.Int;
+  my $moves = 100;
+  my $debug = False;
+
+  my sub prev-cup(Int $val) { $val == 1 ?? 9 !! $val - 1 }
+
+  for ^$moves -> $m {
+      my $current = $m % @cups.elems;
+
+      my @working = @cups.rotate($current);
+
+      my @pickup = @working[1,2,3];
+      my @remain = flat @working[0, 4..*];
+
+      my $insert = prev-cup(@working[0]);
+      $insert = prev-cup($insert) while @pickup.grep($insert);
+      my $insert-index = @remain.first($insert, :k);
+
+      say "
+-- move {$m+1} --
+cups: {@cups}
+pick up: {@pickup}
+destination: {$insert}" if $debug;
+
+      @cups = flat(@remain[0..$insert-index],
+                   @pickup,
+                   @remain[$insert-index+1 .. *])
+                   .Array.rotate(-$current);
+  }
+
+  say "\n-- final --\n{@cups}\n" if $debug;
+
+  say "Part one";
+  say  @cups.rotate(@cups.first(1, :k)).skip.join;
+#+end_src
+
+#+RESULTS:
+: Part one
+: 82635947
+
+
+
+** Part Two
+
+#+begin_quote
+Determine which two cups will end up immediately clockwise of cup 1. What do you get if you
+multiply their labels together?
+#+end_quote
+
+Part two of this problem blows up any naive solution, with a million cups and 10 million
+moves. I started afresh abd chose to model the circle as a singly linked list, using an array to
+store the linkage from one cup to the next. This allows O(1) access for from any cup to the next
+cup in the circle.
+
+#+begin_src raku :results output :tangle 23-part2.raku :shebang "#!/usr/bin/env raku"
+  #my @init-cups = '389125467'.comb>>.Int;
+  my @init-cups = '685974213'.comb>>.Int;
+
+  my $total-cups = 1_000_000;
+  my $moves = 10_000_000;
+
+  my sub prev-cup(Int $val) { $val == 1 ?? $total-cups !! $val - 1 }
+
+  my $current = @init-cups[0];
+
+  my @circle;
+  (^8).map(-> $n { @circle[@init-cups[$n]] = @init-cups[$n+1] });
+  @circle[@init-cups[8]] = 10;
+
+  # Fill with sequential links
+  (10..^1_000_000).map(-> $n { @circle[$n] = $n + 1 });
+  @circle[1_000_000] = $current;
+
+  for ^$moves {
+
+      # Pick up
+      my $a = @circle[$current];
+      my $b = @circle[$a];
+      my $c = @circle[$b];
+      @circle[$current] = @circle[$c];
+
+      # Find insert point
+      my $insert = prev-cup($current);
+      $insert = prev-cup($insert) while $insert ~~ ($a | $b | $c);
+
+      # Insert
+      my $next = @circle[$insert];
+      @circle[$insert] = $a;
+      @circle[$c] = $next;
+
+      # Advance
+      $current = @circle[$current];
+  }
+
+  my $first = @circle[1];
+  my $second = @circle[$first];
+
+  say "Part two";
+  say "{$first} {$second}";
+  say $first * $second;
+
+  say 'Took' ~ (now - ENTER now) ~ 's';
+#+end_src
+
+#+RESULTS:
+: Part two
+: 470997 333437
+: 157047826689
+: Took129.18753173s
+
