@@ -128,33 +128,19 @@ addition expressions before the multiplication expressions.
   unit module Day18Part2;
 
   grammar Sum-Mul-Calc {
-      rule TOP { <prodexp> }
-      rule prodexp { <l=.sumexp> [ <.mul> <r=.sumexp> ]* }
-      rule sumexp { <l=.valexp> [ <.add> <r=.valexp> ]* }
-      rule valexp { <val=.num> | <val=.paren> }
-      rule paren { '(' <prodexp> ')' }
-      token add { '+' }
-      token mul { '*' }
+      rule TOP { <value=.prodexp> }
+      rule prodexp { <values=.sumexp>+ %% '*' }
+      rule sumexp { <values=.valexp>+ %% '+' }
+      rule valexp { <value=.num> | <value=.paren> }
+      rule paren { '(' <value=.prodexp> ')' }
       token num { \d+ }
 
       class Actions {
-          method TOP($/) { make $<prodexp>.made }
-          method prodexp($/) {
-              my $t = $<l>.made;
-              for $<r> -> $r {
-                  $t *= $r.made
-              }
-              make $t
-          }
-          method sumexp($/) {
-              my $t = $<l>.made;
-              for $<r> -> $r {
-                  $t += $r.made
-              }
-              make $t
-          }
-          method valexp($/) { make $<val>.made }
-          method paren($/) { make $<prodexp>.made }
+          method TOP($/) { make $<value>.made }
+          method prodexp($/) { make [*] $<values>>>.made }
+          method sumexp($/) { make [+] $<values>>>.made }
+          method valexp($/) { make $<value>.made }
+          method paren($/) { make $<value>.made }
           method num($/) { make +$/ }
       }
 
@@ -181,6 +167,11 @@ addition expressions before the multiplication expressions.
 #+end_src
 
 #+RESULTS:
+: ok 1 - 
+: ok 2 - 
+: ok 3 - 
+: ok 4 - 
+
 
 **** Solution
 
@@ -201,4 +192,4 @@ say 'Took ' ~ (now - ENTER now) ~ ' seconds';
 #+RESULTS:
 : Part Two
 : 314455761823725
-: Took 0.2279561 seconds
+: Took 0.34398185 seconds
