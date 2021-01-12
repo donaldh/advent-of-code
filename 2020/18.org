@@ -18,6 +18,8 @@ This is a solution to Advent of Code 2020 day 18, written in Raku.
 ** Part One
 
 #+begin_quote
+Unfortunately, it seems like this "math" follows different rules than you remember.
+
 Before you can help with the homework, you need to understand it yourself. Evaluate the
 expression on each line of the homework; what is the sum of the resulting values?
 #+end_quote
@@ -109,3 +111,94 @@ say 'Took ' ~ (now - ENTER now) ~ ' seconds';
 : 1408133923393
 : Took 0.311358 seconds
 
+** Part Two
+
+#+begin_quote
+Now, addition and multiplication have different precedence levels, but they're not the ones
+you're familiar with. Instead, addition is evaluated before multiplication.
+
+What do you get if you add up the results of evaluating the homework problems using these new
+rules?
+#+end_quote
+
+For part two I have modified the grammar rules to produce a parse tree which evaluates the
+addition expressions before the multiplication expressions.
+
+#+begin_src raku :results output :tangle Day18Part2.rakumod
+  unit module Day18Part2;
+
+  grammar Sum-Mul-Calc {
+      rule TOP { <prodexp> }
+      rule prodexp { <l=.sumexp> [ <.mul> <r=.sumexp> ]* }
+      rule sumexp { <l=.valexp> [ <.add> <r=.valexp> ]* }
+      rule valexp { <val=.num> | <val=.paren> }
+      rule paren { '(' <prodexp> ')' }
+      token add { '+' }
+      token mul { '*' }
+      token num { \d+ }
+
+      class Actions {
+          method TOP($/) { make $<prodexp>.made }
+          method prodexp($/) {
+              my $t = $<l>.made;
+              for $<r> -> $r {
+                  $t *= $r.made
+              }
+              make $t
+          }
+          method sumexp($/) {
+              my $t = $<l>.made;
+              for $<r> -> $r {
+                  $t += $r.made
+              }
+              make $t
+          }
+          method valexp($/) { make $<val>.made }
+          method paren($/) { make $<prodexp>.made }
+          method num($/) { make +$/ }
+      }
+
+      method parse(|c) { nextwith(actions => Actions, |c); }
+      method subparse(|c) { nextwith(actions => Actions, |c); }
+  }
+
+  sub calculate(Str $expression) is export {
+      Sum-Mul-Calc.parse($expression).made;
+  }
+#+end_src
+
+**** Tests
+
+#+begin_src raku :results output :tangle 18part2.t
+  use Test;
+  use lib '.';
+  use Day18Part2;
+
+  is calculate('2 * 3 + (4 * 5)'), 46;
+  is calculate('5 + (8 * 3 + 9 + 3 * 4 * 3)'), 1445;
+  is calculate('5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))'), 669060;
+  is calculate('((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2'), 23340;
+#+end_src
+
+#+RESULTS:
+
+**** Solution
+
+The solution to part two is the sum of all the same expressions provided in the input, using the
+new precedence rules.
+
+#+begin_src raku :results output
+use lib '.';
+use Day18Part2;
+
+my @input = '18-input.txt'.IO.lines;
+
+say 'Part Two';
+say [+] @input.map(-> $line { calculate($line) } );
+say 'Took ' ~ (now - ENTER now) ~ ' seconds';
+#+end_src
+
+#+RESULTS:
+: Part Two
+: 314455761823725
+: Took 0.2279561 seconds
