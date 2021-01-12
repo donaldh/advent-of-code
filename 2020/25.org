@@ -1,0 +1,60 @@
+---
+title: "AoC Day 25 – Combo Breaker"
+date: 2021-01-12T14:00:00
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2020 day 25, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/25]]
+
+** Part One
+
+#+begin_quote
+What encryption key is the handshake trying to establish?
+#+end_quote
+
+The first step of this solution finds the exponent ~$loop-value~ for card and door by
+brute-force search. Then we can rapidly calculate the encryption key from either public-key /
+exponent pair using ~expmod~.
+
+#+begin_src raku :results output :tangle 25.raku :shebang "#!/usr/bin/env raku"
+  my Int ($card-public, $door-public) = '25-input.txt'.IO.lines>>.Int;
+
+  sub calc-loop-values(*@publics) {
+
+      my $wanted = SetHash.new(@publics);
+      my %loop-values = gather {
+          my $i = 1;
+          my $value = 1;
+          while +$wanted {
+              $value = ($value * 7) % 20201227;
+              if $wanted{$value} {
+                  take $value => $i;
+                  $wanted.unset($value);
+              }
+              $i++;
+          }
+      }
+      %loop-values;
+  }
+
+  my %loop-values = calc-loop-values($card-public, $door-public);
+  say %loop-values;
+  say expmod($card-public, %loop-values{$door-public}, 20201227);
+  say expmod($door-public, %loop-values{$card-public}, 20201227);
+
+#+end_src
+
+#+RESULTS:
+: {16915772 => 4618530, 18447943 => 6662323}
+: 6011069
+: 6011069
+
