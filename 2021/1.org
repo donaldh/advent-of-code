@@ -1,0 +1,59 @@
+---
+title: "AoC Day 1 – Sonar Sweep"
+date: 2021-12-01
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2021 day 1, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/1]]
+
+** Part One
+
+#+begin_quote
+How many measurements are larger than the previous measurement?
+#+end_quote
+
+#+begin_src raku :results output
+my @measurements = '1-input.txt'.IO.lines>>.Int;
+
+sub count-greater((Int $lval, Int $tot), Int $rval) {
+    $rval, $tot + ($rval > $lval)
+}
+
+my $first = @measurements[0];
+my $num-greater = (reduce &count-greater, ($first, 0), |@measurements[1..*])[1];
+say $num-greater;
+#+end_src
+
+#+RESULTS:
+: 1139
+
+** Part Two
+
+#+begin_quote
+Consider sums of a three-measurement sliding window. How many sums are larger than the previous
+sum?
+#+end_quote
+
+#+begin_src raku :results output
+my @measurements = '1-input.txt'.IO.lines>>.Int;
+
+sub window-greater((Int $a, Int $b, Int $c, Int $tot), Int $next) {
+    $b, $c, $next, $tot + (([+] $b, $c, $next) > ([+] $a, $b, $c))
+}
+
+my ($a, $b, $c) = @measurements[0..2];
+my $num-greater = (reduce &window-greater, ($a, $b, $c, 0), |@measurements[3..*])[3];
+say $num-greater;
+#+end_src
+
+#+RESULTS:
+: 1103
