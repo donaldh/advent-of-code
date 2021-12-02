@@ -28,9 +28,7 @@ sub count-greater((Int $lval, Int $tot), Int $rval) {
     $rval, $tot + ($rval > $lval)
 }
 
-my $first = @measurements[0];
-my $num-greater = (reduce &count-greater, ($first, 0), |@measurements[1..*])[1];
-say $num-greater;
+say reduce(&count-greater, (@measurements[0], 0), |@measurements[1..*])[1];
 #+end_src
 
 #+RESULTS:
@@ -50,9 +48,7 @@ sub window-greater((Int $a, Int $b, Int $c, Int $tot), Int $next) {
     $b, $c, $next, $tot + (([+] $b, $c, $next) > ([+] $a, $b, $c))
 }
 
-my ($a, $b, $c) = @measurements[0..2];
-my $num-greater = (reduce &window-greater, ($a, $b, $c, 0), |@measurements[3..*])[3];
-say $num-greater;
+say reduce(&window-greater, (|@measurements[^3], 0), |@measurements[3..*])[3];
 #+end_src
 
 #+RESULTS:
