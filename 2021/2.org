@@ -1,0 +1,72 @@
+---
+title: "AoC Day 2 – Dive!"
+date: 2021-12-02
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2021 day 2, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2020/day/1]]
+
+** Part One
+
+#+begin_quote
+Calculate the horizontal position and depth you would have after following the planned
+course. What do you get if you multiply your final horizontal position by your final depth?
+#+end_quote
+
+#+begin_src raku :results output
+my $lines = '2-input.txt'.IO.lines>>.split(' ');
+
+sub sum-moves(Str $move) { [+] $lines.grep({ $_[0] ~~ $move }).map({$_[1]}) }
+
+my $f = sum-moves('forward');
+my $d = sum-moves('down');
+my $u = sum-moves('up');
+
+say "Forward {$f}, Down {$d}, Up {$u}";
+say "Horizontal {$f} * Depth {$d - $u} = {$f * ($d - $u)}";
+#+end_src
+
+#+RESULTS:
+: Forward 1962, Down 1969, Up 982
+: Horizontal 1962 * Depth 987 = 1936494
+
+** Part Two
+
+#+begin_quote
+Using this new interpretation of the commands, calculate the horizontal position and depth you
+would have after following the planned course. What do you get if you multiply your final
+horizontal position by your final depth?
+#+end_quote
+
+#+begin_src raku :results output
+my @lines = |'2-input.txt'.IO.lines>>.split(' ');
+
+my $hpos = 0;
+my $depth = 0;
+my $aim = 0;
+
+for @lines -> ($command, $value) {
+    given $command {
+        when 'forward' {
+            $hpos += $value;
+            $depth += $value * $aim
+        }
+        when 'down' { $aim += $value }
+        when 'up' { $aim -= $value }
+    }
+}
+
+say "Horizontal {$hpos} * Depth {$depth} = {$hpos * $depth}";
+#+end_src
+
+#+RESULTS:
+: Horizontal 1962 * Depth 1017893 = 1997106066
