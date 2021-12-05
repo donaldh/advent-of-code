@@ -1,0 +1,63 @@
+---
+title: "AoC Day 3 – Binary Diagnostic"
+date: 2021-12-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2021 day 3, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2021/day/3]]
+
+** Part One
+
+#+begin_quote Use the binary numbers in your diagnostic report to calculate the gamma rate and
+epsilon rate, then multiply them together. What is the power consumption of the submarine? (Be
+sure to represent your answer in decimal, not binary.)
+#+end_quote
+
+#+begin_src raku :results output
+my @lines = '3-input.txt'.IO.lines>>.comb;
+my $most-common = reduce(-> $a, $b { $a >>+<< $b }, 0 xx 12, |@lines).map((* >= 500).Int).join;
+my $gamma = $most-common.parse-base(2);
+my $epsilon = $most-common.trans('10'=>'01').parse-base(2);
+say "Gamma {$gamma} * Epsilon {$epsilon} = Power consumption {$gamma * $epsilon}";
+#+end_src
+
+#+RESULTS:
+: Gamma 2566 * Epsilon 1529 = Power consumption 3923414
+
+** Part Two
+
+#+begin_quote
+Use the binary numbers in your diagnostic report to calculate the oxygen generator rating and
+CO2 scrubber rating, then multiply them together. What is the life support rating of the
+submarine? (Be sure to represent your answer in decimal, not binary.)
+#+end_quote
+
+#+begin_src raku :results output :tangle yes
+#!/usr/bin/env raku
+my @lines = '3-input.txt'.IO.lines>>.comb>>.Array;
+sub filter(@lines is copy, $value) {
+    my $pos = 0;
+    while +@lines > 1 && $pos < 12 {
+        my @frequency = reduce(-> $a, $b { $a >>+<< $b }, 0 xx 12, |@lines).map((* >= (+@lines / 2)).Int);
+        my $which = @frequency[$pos] +^ $value;
+        @lines .= grep({$_[$pos].Int == $which});
+        $pos += 1;
+    }
+    @lines[0]
+}
+my $ox = filter(@lines, 0).join.parse-base(2);
+my $co2 = filter(@lines, 1).join.parse-base(2);
+say "Oxygen {$ox} * CO2 {$co2} = Life support {$ox * $co2}";
+#+end_src
+
+#+RESULTS:
+: Oxygen 2919 * CO2 2005 = Life support 5852595
