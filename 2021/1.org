@@ -13,13 +13,15 @@ This is a solution to Advent of Code 2021 day 1, written in Raku.
 
 <!--more-->
 
-[[https://adventofcode.com/2020/day/1]]
+[[https://adventofcode.com/2021/day/1]]
 
 ** Part One
 
 #+begin_quote
 How many measurements are larger than the previous measurement?
 #+end_quote
+
+I decided to solve this first problem using a reduce operation:
 
 #+begin_src raku :results output
 my @measurements = '1-input.txt'.IO.lines>>.Int;
@@ -41,15 +43,77 @@ Consider sums of a three-measurement sliding window. How many sums are larger th
 sum?
 #+end_quote
 
+The solution for part one can be reused for part two, but with a window of three values passed
+to the reduce code block. This could be generalised using a list instead. I started off naively
+summing all the values in each window, before I realised that the middle values are common to
+both sides of the comparison.
+
+#+begin_src raku
+sub window-greater((Int $a, Int $b, Int $c, Int $tot), Int $next) {
+    $b, $c, $next, $tot + (([+] $b, $c, $next) > ([+] $a, $b, $c))
+}
+#+end_src
+
+This meant that the above code block could be simplified to the one included in the solution
+below:
+
 #+begin_src raku :results output
 my @measurements = '1-input.txt'.IO.lines>>.Int;
 
 sub window-greater((Int $a, Int $b, Int $c, Int $tot), Int $next) {
-    $b, $c, $next, $tot + (([+] $b, $c, $next) > ([+] $a, $b, $c))
+    $b, $c, $next, $tot + ($next > $a)
 }
-
-say reduce(&window-greater, (|@measurements[^3], 0), |@measurements[3..*])[3];
+{
+    say reduce(&window-greater, (|@measurements[^3], 0), |@measurements[3..*])[3];
+    say now - ENTER now
+}
 #+end_src
 
 #+RESULTS:
+: 1103
+: 0.064643759
+
+The complexity of the reduce approach is quite costly so I wrote an array walk solution as a
+performance comparison:
+
+#+begin_src raku :results output
+my @measurements = '1-input.txt'.IO.lines>>.Int;
+
+{
+    say [+] (@measurements[$_] > @measurements[$_ - 3] for 3..+@measurements);
+    say now - ENTER now
+}
+#+end_src
+
+#+RESULTS:
+: 1103
+: 0.011056239
+
+The array walk is significantly faster.
+
+** Generalised Solution
+
+Either solution could be generalised, but the array walk solution just needs to parameterise a
+single value in the previous solution:
+
+#+begin_src raku :results output
+my @measurements = '1-input.txt'.IO.lines>>.Int;
+
+sub sum-increasing(@items, $window-size) {
+    [+] (
+        @items[$_] > @items[$_ - $window-size] for $window-size..+@items
+    )
+}
+
+say 'Part One';
+say sum-increasing(@measurements, 1);
+
+say 'Part Two';
+say sum-increasing(@measurements, 3);
+#+end_src
+
+#+RESULTS:
+: Part One
+: 1139
+: Part Two
 : 1103
