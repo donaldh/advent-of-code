@@ -1,0 +1,46 @@
+---
+title: "AoC Day 1 – Calorie Counting"
+date: 2022-12-01
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 1, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/1]]
+
+** Part One
+
+#+begin_quote
+Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?
+#+end_quote
+
+#+begin_src raku :results output
+my @elves = '1-input.txt'.IO.split("\n\n")>>.lines;
+say max @elves>>.sum;
+#+end_src
+
+#+RESULTS:
+: 68923
+
+
+** Part Two
+
+#+begin_quote
+Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying
+in total?
+#+end_quote
+
+#+begin_src raku :results output
+my @elves = '1-input.txt'.IO.split("\n\n")>>.lines;
+say sort(@elves>>.sum).tail(3).sum;
+#+end_src
+
+#+RESULTS:
+: 200044
