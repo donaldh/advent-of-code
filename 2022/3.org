@@ -1,0 +1,62 @@
+---
+title: "2022 AoC Day 3 – Rucksack Reorganization"
+date: 2022-12-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 3, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/3]]
+
+** Part One
+
+#+begin_quote
+Find the item type that appears in both compartments of each rucksack. What is the sum of the
+priorities of those item types?
+#+end_quote
+
+#+begin_src raku :results output
+my @rucksacks = '3-input.txt'.IO.lines.map({
+    my @contents = .comb;
+    my Int $half = +@contents div 2;
+    my @i = [(&)] @contents[^$half, $half..*];
+    given @i.head.key {
+        when / <[a..z]>/ { $_.ord - 'a'.ord + 1 }
+
+        when / <[A..Z]> / { $_.ord - 'A'.ord + 27 }
+    }
+});
+say [+] @rucksacks;
+#+end_src
+
+#+RESULTS:
+: 7597
+
+** Part Two
+
+#+begin_quote
+Find the item type that corresponds to the badges of each three-Elf group. What is the sum of
+the priorities of those item types?
+#+end_quote
+
+#+begin_src raku :results output
+my @rucksacks = '3-input.txt'.IO.lines.map({ .comb }).map(-> @a, @b, @c, {
+    my $i = (@a (&) @b (&) @c).head.key;
+    given $i {
+        when / <[a..z]>/ { $_.ord - 'a'.ord + 1 }
+
+        when / <[A..Z]> / { $_.ord - 'A'.ord + 27 }
+    }
+});
+say [+] @rucksacks;
+#+end_src
+
+#+RESULTS:
+: 2607
