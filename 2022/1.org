@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 1 – Calorie Counting"
+title: "2022 AoC Day 1 – Calorie Counting"
 date: 2022-12-01
 tags:
   - raku
@@ -21,8 +21,16 @@ This is a solution to Advent of Code 2022 day 1, written in Raku.
 Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?
 #+end_quote
 
+The input text has several lines per Elf, with a single calorie value per line. The lines for
+each Elf are split by a double newline. We need to calculate the sum of the calorie values for
+each Elf and then find the maximum.
+
 #+begin_src raku :results output
+# Build a list of lists of calorie values per Elf.
+# Split the input by Elf and then split again by line
 my @elves = '1-input.txt'.IO.split("\n\n")>>.lines;
+
+# Reduce each Elf list to its total and find the maximum
 say max @elves>>.sum;
 #+end_src
 
@@ -37,9 +45,18 @@ Find the top three Elves carrying the most Calories. How many Calories are those
 in total?
 #+end_quote
 
+Instead of finding the maximum, we need to sort the list of totals and take the top three. Then
+we can report the sum of those three totals.
+
 #+begin_src raku :results output
 my @elves = '1-input.txt'.IO.split("\n\n")>>.lines;
-say sort(@elves>>.sum).tail(3).sum;
+
+# Reduce, sort and sum the top three
+say @elves>>.sum.sort.tail(3).sum;
+#+end_src
+
+#+RESULTS:
+: 200044
 #+end_src
 
 #+RESULTS:
