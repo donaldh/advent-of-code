@@ -1,0 +1,70 @@
+---
+title: "2022 AoC Day 2 – Rock Paper Scissors"
+date: 2022-12-02
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 2, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/2]]
+
+** Part One
+
+#+begin_quote
+What would your total score be if everything goes exactly according to your strategy guide?
+#+end_quote
+
+#+begin_src raku :results output
+say [+] '2-input.txt'.IO.lines.map({
+    my ($a, $b) = .trans('ABCXYZ' => '123123').split(' ');
+    if $a == $b {
+        $b + 3
+    } elsif $a+1 == $b || $a == $b+2 {
+        $b + 6
+    } else {
+        $b
+    }
+});
+#+end_src
+
+#+RESULTS:
+: 11386
+
+
+** Part Two
+
+#+begin_quote
+Following the Elf's instructions for the second column, what would your total score be if
+everything goes exactly according to your strategy guide?
+#+end_quote
+
+#+begin_src raku :results output
+say [+] '2-input.txt'.IO.lines.map({
+    my ($a, $s) = .split(' ');
+
+    $a .= trans('ABC' => '123');
+    my $b = do given $s {
+        when 'X' { $a.trans('123' => '312') }
+        when 'Y' { $a }
+        when 'Z' { $a.trans('123' => '231') }
+    }
+
+    if $a == $b {
+        $b += 3
+    } elsif $a+1 == $b || $a == $b+2 {
+        $b += 6
+    } else {
+        $b
+    }
+});
+#+end_src
+
+#+RESULTS:
+: 13600
