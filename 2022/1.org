@@ -38,6 +38,29 @@ say max @elves>>.sum;
 : 68923
 
 
+*** Rust
+
+#+begin_src rust
+use std::error::Error;
+use std::fs;
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("/Users/donaldh/git/advent-of-code/2022/1-input.txt")?;
+    let elves: Vec<Vec<u32>> = input
+        .split("\n\n")
+        .map(|x| x.lines().map(|x| x.parse::<u32>().unwrap()).collect())
+        .collect();
+    let calories: Vec<u32> = elves.iter().map(|x| x.iter().sum()).collect();
+    let max = calories.iter().max().unwrap();
+    println!("{:#?}", max);
+
+    Ok(())
+}
+#+end_src
+
+#+RESULTS:
+: 68923
+
+
 ** Part Two
 
 #+begin_quote
@@ -57,6 +80,25 @@ say @elves>>.sum.sort.tail(3).sum;
 
 #+RESULTS:
 : 200044
+
+*** Rust
+
+#+begin_src rust
+use std::error::Error;
+use std::fs;
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("/Users/donaldh/git/advent-of-code/2022/1-input.txt")?;
+    let elves: Vec<Vec<u32>> = input
+        .split("\n\n")
+        .map(|x| x.lines().map(|x| x.parse::<u32>().unwrap()).collect())
+        .collect();
+    let mut calories: Vec<u32> = elves.iter().map(|x| x.iter().sum()).collect();
+    calories.sort();
+    let sum3: u32 = calories.iter().rev().take(3).sum();
+    println!("{:#?}", sum3);
+
+    Ok(())
+}
 #+end_src
 
 #+RESULTS:
