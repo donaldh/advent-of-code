@@ -1,0 +1,53 @@
+---
+title: "2022 AoC Day 4 – Camp Cleanup"
+date: 2022-12-04
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 4, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/4]]
+
+** Part One
+
+#+begin_quote
+In how many assignment pairs does one range fully contain the other?
+#+end_quote
+
+#+begin_src raku :results output
+say [+] '4-input.txt'.IO.lines.map({
+    my Int ($a, $b, $x, $y) = .comb(/\d+/)>>.Int;
+    my @a = $a..$b;
+    my @b = $x..$y;
+    @a (<=) @b || @b (<=) @a;
+});
+#+end_src
+
+#+RESULTS:
+: 500
+
+
+** Part Two
+
+#+begin_quote
+In how many assignment pairs do the ranges overlap?
+#+end_quote
+
+#+begin_src raku :results output
+say [+] '4-input.txt'.IO.lines.map({
+    my Int ($a, $b, $x, $y) = .comb(/\d+/)>>.Int;
+    my @a = $a..$b;
+    my @b = $x..$y;
+    ?(@a (&) @b)
+});
+#+end_src
+
+#+RESULTS:
+: 815
