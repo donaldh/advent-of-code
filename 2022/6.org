@@ -1,0 +1,79 @@
+---
+title: "2022 AoC Day 6 – Tuning Trouble"
+date: 2022-12-06
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 6, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/6]]
+
+** Part One
+
+#+begin_quote
+How many characters need to be processed before the first start-of-packet marker is detected?
+#+end_quote
+
+#+begin_src raku :results output
+sub start-of-packet($s) {
+    $s.match(/ (\w ** 4) <?{ $/.comb.Set.elems == 4 }> /).pos
+}
+
+say 'Part 1 Tests:';
+for '6-input-test.txt'.IO.lines Z (7,5,6,10,11) -> ($s, $n) {
+    my $r = start-of-packet($s);
+    say "$s : $r == $n : {$r == $n}";
+}
+
+say 'Part 1 Result:';
+say start-of-packet(slurp '6-input.txt');
+#+end_src
+
+#+RESULTS:
+: Part 1 Tests:
+: mjqjpqmgbljsphdztnvjfqwrcgsmlb : 7 == 7 : True
+: bvwbjplbgvbhsrlpgdmjqwftvncz : 5 == 5 : True
+: nppdvjthqldpwncqszvftbrmjlhg : 6 == 6 : True
+: nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg : 10 == 10 : True
+: zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw : 11 == 11 : True
+: Part 1 Result:
+: 1855
+
+
+** Part Two
+
+#+begin_quote
+How many characters need to be processed before the first start-of-message marker is detected?
+#+end_quote
+
+#+begin_src raku :results output
+sub start-of-message($s) {
+    $s.match(/ (\w ** 14) <?{ $/.comb.Set.elems == 14 }> /).pos;
+}
+say 'Part 2 Tests:';
+for '6-input-test.txt'.IO.lines Z (19,23,23,29,26) -> ($s, $n) {
+    my $r = start-of-message($s);
+    say "$s : $r == $n : {$r == $n}";
+}
+say 'Part 2 Result:';
+say start-of-message(slurp '6-input.txt');
+say 'Took '  ~ (now - ENTER now) ~ ' seconds';
+#+end_src
+
+#+RESULTS:
+: Part 2 Tests:
+: mjqjpqmgbljsphdztnvjfqwrcgsmlb : 19 == 19 : True
+: bvwbjplbgvbhsrlpgdmjqwftvncz : 23 == 23 : True
+: nppdvjthqldpwncqszvftbrmjlhg : 23 == 23 : True
+: nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg : 29 == 29 : True
+: zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw : 26 == 26 : True
+: Part 2 Result:
+: 3256
+: Took 0.068751676 seconds
