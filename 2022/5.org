@@ -1,0 +1,83 @@
+---
+title: "2022 AoC Day 5 – Supply Stacks"
+date: 2022-12-05
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 5, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/5]]
+
+** Part One
+
+#+begin_quote
+After the rearrangement procedure completes, what crate ends up on top of each stack?
+#+end_quote
+
+#+begin_src raku :results output
+my ($drawing, $moves) = '5-input.txt'.IO.split("\n\n");
+my %stacks;
+for $drawing.lines -> $l {
+    for $l.comb[1,5...*] Z 1..* -> ($c, $i) {
+        $c ~~ 'A'..'Z' && %stacks{$i}.push($c);
+    }
+}
+
+for $moves.lines -> $m {
+    my ($many, $from, $to) = $m.comb(/\d+/);
+
+    for ^$many {
+        my $c = %stacks{$from}.shift;
+        %stacks{$to}.unshift($c);
+    }
+}
+
+say %stacks{1..+%stacks}.map(*.head).join;
+#+end_src
+
+#+RESULTS:
+: RFFFWBPNS
+
+
+
+** Part Two
+
+#+begin_quote
+Before the rearrangement process finishes, update your simulation so that the Elves know where
+they should stand to be ready to unload the final supplies. After the rearrangement procedure
+completes, what crate ends up on top of each stack?
+#+end_quote
+
+#+begin_src raku :results output
+my ($drawing, $moves) = '5-input.txt'.IO.split("\n\n");
+my %stacks;
+for $drawing.lines -> $l {
+    for $l.comb[1,5...*] Z 1..* -> ($c, $i) {
+        $c ~~ 'A'..'Z' && %stacks{$i}.push($c);
+    }
+}
+
+for $moves.lines -> $m {
+    my ($many, $from, $to) = $m.comb(/\d+/);
+
+    my @m;
+    for ^$many {
+        @m.push: %stacks{$from}.shift;
+    }
+    for ^$many {
+        %stacks{$to}.unshift(@m.pop);
+    }
+}
+
+say %stacks{1..+%stacks}.map(*.head).join;
+#+end_src
+
+#+RESULTS:
+: CQQBBJFCS
