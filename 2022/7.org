@@ -1,0 +1,105 @@
+---
+title: "2022 AoC Day 7 – No Space Left On Device"
+date: 2022-12-07
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2022 day 7, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2022/day/7]]
+
+** Part One
+
+#+begin_quote
+Find all of the directories with a total size of at most 100000. What is the sum of the total
+sizes of those directories?
+#+end_quote
+
+#+begin_src raku :results output :tangle 7.raku
+class File {
+    has Str $.name;
+    has Int $.size;
+
+    method display($indent) { say ' ' x $indent ~ "- $!name (file, size=$!size)" }
+}
+
+class Dir {
+    has Str $.name;
+    has @.files;
+    has %.dirs;
+
+    method display($indent) {
+        say ' ' x $indent ~ "- $!name (dir)";
+        @!files>>.display($indent + 2);
+        %!dirs.values>>.display($indent + 2);
+    }
+
+    method total-size { [+] flat %!dirs.values>>.total-size, @!files>>.size }
+    method all-dirs { flat %.dirs.values, $.dirs.values>>.all-dirs }
+}
+
+my $root = Dir.new(name => '/');
+my $cwd;
+my @dirstack;
+
+for '7-input.txt'.IO.lines {
+    when /'$ cd /'/ { @dirstack = (); $cwd = $root; }
+    when /'$ cd ' (\w+)/ {
+        @dirstack.push($cwd);
+        $cwd = $cwd.dirs{$/[0].Str};
+    }
+    when /'$ cd ..'/ { $cwd = @dirstack.pop }
+    when /^ 'dir ' (\w+)/ {
+        my $name = $/[0].Str;
+        $cwd.dirs{$name} = Dir.new(:$name);
+    }
+    when /(\d+) ' ' (.+)$/ {
+        my $name = $/[1].Str;
+        my $size = $/[0].Int;
+        $cwd.files.push(File.new(:$name, :$size));
+    }
+}
+
+say "Part One:";
+say "The sum of dirs <= 100,000 = " ~ [+] $root.all-dirs>>.total-size.grep(* <= 100_000);
+#+end_src
+
+#+RESULTS:
+: Part One:
+: The sum of dirs <= 100,000 = 1778099
+
+
+** Part Two
+
+#+begin_quote
+Find the smallest directory that, if deleted, would free up enough space on the filesystem to
+run the update. What is the total size of that directory?
+#+end_quote
+
+#+begin_src raku :results output :tangle 7.raku
+say '';
+say "Part Two:";
+my $needed = 30_000_000 - (70_000_000 - $root.total-size);
+my @candidates = $root.all-dirs>>.total-size.grep(* >= $needed);
+say "Need to free up $needed space to provide at least 30,000,000 for the update";
+say "The smallest candidate is " ~ @candidates.min;
+#+end_src
+
+#+begin_src sh :results output
+raku 7.raku
+#+end_src
+
+#+RESULTS:
+: Part One:
+: The sum of dirs <= 100,000 = 1778099
+: 
+: Part Two:
+: Need to free up 1609574 space to provide at least 30,000,000 for the update
+: The smallest candidate is 1623571
