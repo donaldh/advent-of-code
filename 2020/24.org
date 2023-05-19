@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 24 – Lobby Layout"
+title: "2020 AoC Day 24 – Lobby Layout"
 date: 2021-01-06T18:00:00
 tags:
   - raku

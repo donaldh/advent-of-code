@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 5 – Binary Boarding"
+title: "2020 AoC Day 5 – Binary Boarding"
 date: 2020-12-06
 tags:
   - raku

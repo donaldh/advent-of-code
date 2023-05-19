@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 8 – Handheld Halting"
+title: "2020 AoC Day 8 – Handheld Halting"
 date: 2020-12-09
 tags:
   - raku

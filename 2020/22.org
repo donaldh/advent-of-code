@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 22 – Crab Combat"
+title: "2020 AoC Day 22 – Crab Combat"
 date: 2021-01-05T22:00:00
 tags:
   - raku

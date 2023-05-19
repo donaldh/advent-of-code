@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 7 – Handy Haversacks"
+title: "2020 AoC Day 7 – Handy Haversacks"
 date: 2020-12-08
 tags:
   - raku

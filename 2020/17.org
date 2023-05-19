@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 17 – Conway Cubes"
+title: "2020 AoC Day 17 – Conway Cubes"
 date: 2020-12-27T10:00:00
 tags:
   - raku

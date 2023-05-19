@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 19 – Monster Messages"
+title: "2020 AoC Day 19 – Monster Messages"
 date: 2020-12-28T12:00:00
 tags:
   - raku
@@ -27,34 +27,34 @@ My solution for part one transforms the rules into a regex pattern and then coun
 messages that completely match the pattern.
 
 #+begin_src raku :results output :tangle Day19.rakumod
-  unit module Day19;
+unit module Day19;
 
-  sub evaluate(Str $input) is export {
-      my ($rules, $messages) = $input.split("\n\n");
-      my %rules = $rules.lines.map(*.split(': ')).flat;
+sub evaluate(Str $input) is export {
+    my ($rules, $messages) = $input.split("\n\n");
+    my %rules = $rules.lines.map(*.split(': ')).flat;
 
-      sub make-pat($index) {
-          given %rules{$index} {
-              when /^ (\d+)+ % ' ' $/ {
-                  join(' ', do for $0 -> $r { make-pat(~$r) });
-              }
+    sub make-pat($index) {
+        given %rules{$index} {
+            when /^ (\d+)+ % ' ' $/ {
+                join(' ', do for $0 -> $r { make-pat(~$r) });
+            }
 
-              when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
-                  '( ' ~
-                  join(' ', do for $0 -> $r { make-pat(~$r) })
-                  ~ ' | ' ~
-                  join(' ', do for $1 -> $r { make-pat(~$r) })
-                  ~ ' )'
-              }
-              when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
-              default { fail "Got unexpected " ~ $_; }
-          }
-      }
+            when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
+                '( ' ~
+                join(' ', do for $0 -> $r { make-pat(~$r) })
+                ~ ' | ' ~
+                join(' ', do for $1 -> $r { make-pat(~$r) })
+                ~ ' )'
+            }
+            when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
+            default { fail "Got unexpected " ~ $_; }
+        }
+    }
 
-      my $pattern = make-pat('0');
+    my $pattern = make-pat('0');
 
-      [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
-  }
+    [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
+}
 
 #+end_src
 
@@ -115,43 +115,42 @@ matches of sub rules ~42~ and ~31~. The embedded interpolation required ~MONKEY-
 be enabled.
 
 #+begin_src raku :results output :tangle Day19PartTwo.rakumod
-  unit module Day19PartTwo;
+unit module Day19PartTwo;
 
-  use MONKEY-SEE-NO-EVAL;
+use MONKEY-SEE-NO-EVAL;
 
-  sub evaluate(Str $input) is export {
-      my ($rules, $messages) = $input.split("\n\n");
-      my %rules = $rules.lines.map(*.split(': ')).flat;
+sub evaluate(Str $input) is export {
+    my ($rules, $messages) = $input.split("\n\n");
+    my %rules = $rules.lines.map(*.split(': ')).flat;
 
-      sub make-pat($index) {
-          given %rules{$index} {
-              when $index eq '8' {
-                  make-pat('42') ~ '+ '
-              }
-              when $index eq '11' {
-                  '$<left>=' ~ make-pat('42') ~ '+ $<right>=' ~ make-pat('31') ~ '+ <?{ $<left> == $<right> }>'
-              }
-              when /^ (\d+)+ % ' ' $/ {
-                  join(' ', do for $0 -> $r { make-pat(~$r) });
-              }
+    sub make-pat($index) {
+        given %rules{$index} {
+            when $index eq '8' {
+                make-pat('42') ~ '+ '
+            }
+            when $index eq '11' {
+                '$<left>=' ~ make-pat('42') ~ '+ $<right>=' ~ make-pat('31') ~ '+ <?{ $<left> == $<right> }>'
+            }
+            when /^ (\d+)+ % ' ' $/ {
+                join(' ', do for $0 -> $r { make-pat(~$r) });
+            }
 
-              when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
-                  '( ' ~
-                  join(' ', do for $0 -> $r { make-pat(~$r) })
-                  ~ ' | ' ~
-                  join(' ', do for $1 -> $r { make-pat(~$r) })
-                  ~ ' )'
-              }
-              when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
-              default { fail "Got unexpected " ~ $_; }
-          }
-      }
+            when /^ (\d+)+ % ' ' ' | ' (\d+)+ % ' ' / {
+                '( ' ~
+                join(' ', do for $0 -> $r { make-pat(~$r) })
+                ~ ' | ' ~
+                join(' ', do for $1 -> $r { make-pat(~$r) })
+                ~ ' )'
+            }
+            when /^ '"' (\w) '"' $/ { "'{~$0}'"; }
+            default { fail "Got unexpected " ~ $_; }
+        }
+    }
 
-      my $pattern = make-pat('0');
+    my $pattern = make-pat('0');
 
-      [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
-  }
-
+    [+] $messages.lines.map( -> $line { $line.match( /^ <$pattern> $/ ).Bool; } );
+}
 #+end_src
 
 

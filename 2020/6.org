@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 6 – Custom Customs"
+title: "2020 AoC Day 6 – Custom Customs"
 date: 2020-12-07
 tags:
   - raku

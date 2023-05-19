@@ -1,5 +1,5 @@
 ---
-title: "AoC Day 9 – Encoding Error"
+title: "2020 AoC Day 9 – Encoding Error"
 date: 2020-12-10
 tags:
   - raku
