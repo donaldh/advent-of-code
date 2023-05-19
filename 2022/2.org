@@ -9,7 +9,7 @@ categories:
 comments: true
 ---
 
-This is a solution to Advent of Code 2022 day 2, written in Raku.
+This is a solution to Advent of Code 2022 day 2, written in Raku and Rust.
 
 <!--more-->
 
@@ -20,6 +20,13 @@ This is a solution to Advent of Code 2022 day 2, written in Raku.
 #+begin_quote
 What would your total score be if everything goes exactly according to your strategy guide?
 #+end_quote
+
+Each line of the input text has a char ~A|B|C~ for the Elf's shape and a char ~X|Y|Z~ for your
+shape. Convert these to values ~1|2|3~ so they can be compared and summed:
+
+- A win is shape value + 6
+- A draw is shape value + 3
+- A loss is shape value
 
 #+begin_src raku :results output
 say [+] '2-input.txt'.IO.lines.map({
@@ -59,16 +66,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             .split(" ")
             .map(|y| values.get(y).unwrap())
             .collect();
-        let first = pair[0];
-        let second = pair[1];
+        let first = *pair[0];
+        let second = *pair[1];
         if first == second {
             second + 3
-        } else if first + 1 == *second || *first == second + 2 {
+        } else if first + 1 == second || first == second + 2 {
             second + 6
         } else {
-            *second
+            second
         }
-    }).sum::<i32>();
+    })
+    .sum::<i32>();
 
     println!("{:#?}", total);
 
@@ -79,17 +87,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 #+RESULTS:
 : 11386
 
-#+begin_src rust
-use std::collections::HashMap;
-fn main() {
-    let values = HashMap::from([("A", 1), ("B", 2), ("C", 3), ("X", 1), ("Y", 2), ("Z", 3)]);
-    println!("{:#?}", values.get("A").unwrap());
-}
-#+end_src
-
-#+RESULTS:
-: 1
-
 
 ** Part Two
 
@@ -97,6 +94,9 @@ fn main() {
 Following the Elf's instructions for the second column, what would your total score be if
 everything goes exactly according to your strategy guide?
 #+end_quote
+
+In part two, the second column of input now tells us whether we should lose, draw or win. We
+need to choose the required shape based on the shape the Elf chooses.
 
 #+begin_src raku :results output
 say [+] '2-input.txt'.IO.lines.map({
