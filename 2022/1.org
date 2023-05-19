@@ -9,7 +9,7 @@ categories:
 comments: true
 ---
 
-This is a solution to Advent of Code 2022 day 1, written in Raku.
+This is a solution to Advent of Code 2022 day 1, written in Raku and Rust.
 
 <!--more-->
 
