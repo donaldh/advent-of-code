@@ -1,0 +1,84 @@
+---
+title: "2023 AoC Day 1 – Trebuchet?!"
+date: 2023-12-1
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 1, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/1]]
+
+** Part One
+
+#+begin_quote
+On each line, the calibration value can be found by combining the first digit and the last digit
+(in that order) to form a single two-digit number.
+
+Consider your entire calibration document. What is the sum of all of the calibration values?
+#+end_quote
+
+#+begin_src raku :results output
+my $total = 0;
+for '1-input.txt'.IO.lines -> $l {
+    my @digits = $l.comb(/\d/);
+    my $j = @digits[0,*-1].join;
+    $total += $j
+}
+say $total;
+#+end_src
+
+#+RESULTS:
+: 54597
+
+** Part Two
+
+#+begin_quote
+It looks like some of the digits are actually spelled out with letters: one, two, three, four,
+five, six, seven, eight, and nine also count as valid "digits" ...
+
+What is the sum of all of the calibration values?
+#+end_quote
+
+#+begin_example
+two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen
+#+end_example
+
+#+begin_src raku :results output
+my %numbers = 'one' => 1, 'two' => 2, 'three' => 3,
+              'four' => 4, 'five' => 5, 'six' => 6,
+              'seven' => 7, 'eight' => 8, 'nine' => 9;
+my @words = %numbers.keys;
+
+my $total = 0;
+for '1-input.txt'.IO.lines -> $l {
+    # sadly an epically slow regex
+    my $m = $l.match(/(@words | \d)/, :global, :overlap);
+    my ($first, $last) = $m[0,*-1]>>.Str.map({ .Int // %numbers{$_} });
+    $total += $first * 10 + $last;
+}
+say $total;
+say now - ENTER now;
+#+end_src
+
+#+RESULTS:
+: 54504
+: 1.589480831
+
+The hand-written equivalent regex is considerably faster. Need to figure out why one day.
+
+#+begin_src sh :results output
+    my $m = $l.match(/('one'|'two'|'three'|'four'|'five'|'six'|'seven'|'eight'|'nine'|\d)/, :global, :overlap);
+#+end_src
