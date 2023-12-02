@@ -1,0 +1,74 @@
+---
+title: "2023 AoC Day 2 – Cube Conundrum"
+date: 2023-12-2
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 2, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/2]]
+
+** Part One
+
+#+begin_quote
+Determine which games would have been possible if the bag had been loaded with only 12 red
+cubes, 13 green cubes, and 14 blue cubes. What is the sum of the IDs of those games?
+#+end_quote
+
+#+begin_src raku :results output
+my ($r, $g, $b) = 12, 13, 14;
+my $total = 0;
+
+outer:
+for '2-input.txt'.IO.lines {
+    my ($game, $plays) = .split(': ');
+    $game = $game.split(' ')[1];
+    my @plays = $plays.split('; ')>>.comb(/\d+|\w+/)>>.map(-> $n, $c { $c => $n })>>.Bag;
+
+    for @plays -> $p {
+        if $p<red> > $r or $p<green> > $g or $p<blue> > $b {
+            next outer;
+        }
+    }
+    $total += $game;
+}
+say "Sum of game ids is {$total}";
+#+end_src
+
+#+RESULTS:
+: Sum of game ids is 2505
+
+
+** Part Two
+
+#+begin_quote
+For each game, find the minimum set of cubes that must have been present. What is the sum of the
+power of these sets?
+#+end_quote
+
+
+#+begin_src raku :results output
+my $total = 0;
+for '2-input.txt'.IO.lines {
+    my ($game, $plays) = .split(': ');
+    $game = $game.comb(/\d+/)[0];
+    my @plays = $plays.split('; ')>>.comb(/\d+|\w+/)>>.map(-> $n, $c { $c => $n })>>.Bag;
+
+    my $r = @plays.map(-> $p { $p<red> }).max;
+    my $g = @plays.map(-> $p { $p<green> }).max;
+    my $b = @plays.map(-> $p { $p<blue> }).max;
+
+    $total += $r * $g * $b;
+}
+say "Sum of powers is {$total}";
+#+end_src
+
+#+RESULTS:
+: Sum of powers is 70265
