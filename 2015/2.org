@@ -1,0 +1,60 @@
+---
+title: "2015 AoC Day 2 – I Was Told There Would Be No Math"
+date: 2015-11-02
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2015 day 2, written in Raku and Rust.
+
+<!--more-->
+
+https://adventofcode.com/2015/day/2
+
+** Part One
+
+#+begin_quote
+The elves are running low on wrapping paper, and so they need to submit an order for more. They
+have a list of the dimensions (length l, width w, and height h) of each present, and only want
+to order exactly as much as they need ...
+
+All numbers in the elves' list are in feet. How many total square feet of wrapping paper should
+they order?
+#+end_quote
+
+#+begin_src raku :results output
+my $total = 0;
+for '2-input.txt'.IO.lines {
+    my @dims = .split('x')>>.Num.sort;
+    my @sides = @dims.combinations(2);
+    $total += ([+] @sides>>.reduce(&infix:<*>)) * 2;
+    $total += @sides[0].reduce(&infix:<*>);
+}
+say "{$total} square feet of wrapping paper";
+#+end_src
+
+#+RESULTS:
+: 1586300 square feet of wrapping paper
+
+** Part Two
+
+#+begin_quote
+How many total feet of ribbon should they order?
+#+end_quote
+
+#+begin_src raku :results output
+my $total = 0;
+for '2-input.txt'.IO.lines {
+    my @dims = .split('x')>>.Num.sort;
+    $total += ([+] @dims[0,1]) * 2;
+    $total += [*] @dims;
+}
+say "{$total} feet of ribbon";
+#+end_src
+
+#+RESULTS:
+: 3737498 feet of ribbon

@@ -1,0 +1,63 @@
+---
+title: "2015 AoC Day 1 – Not Quite Lisp"
+date: 2015-11-01
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2015 day 1, written in Raku and Rust.
+
+<!--more-->
+
+https://adventofcode.com/2015/day/1
+
+** Part One
+
+#+begin_quote
+An opening parenthesis, (, means he should go up one floor, and a closing parenthesis, ), means
+he should go down one floor...
+
+To what floor do the instructions take Santa?
+#+end_quote
+
+#+begin_src raku :results output
+my $input = slurp '1-input.txt';
+say +$input.comb('(') - +$input.comb(')');
+say [-] $input.comb.Bag{'(',')'}
+#+end_src
+
+#+RESULTS:
+: 280
+: 280
+
+** Part Two
+
+#+begin_quote
+What is the position of the character that causes Santa to first enter the basement?
+#+end_quote
+
+#+begin_src raku :results output
+my $input = slurp '1-input.txt';
+my $floor = 0;
+my $pos = 1;
+
+for $input.comb -> $sym {
+    given $sym {
+        when '(' { $floor++; }
+        when ')' { $floor--; }
+    }
+    # say "{$sym}, {$pos}, {$floor}";
+    if $floor < 0 {
+        say "'{$sym}' at pos {$pos} enters the basement";
+        last;
+    }
+    $pos++;
+}
+#+end_src
+
+#+RESULTS:
+: ')' at pos 1797 enters the basement

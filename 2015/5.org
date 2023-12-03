@@ -1,0 +1,61 @@
+---
+title: "2015 AoC Day 5 – Doesn't He Have Intern-Elves For This?"
+date: 2023-11-23
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2015 day 5, written in Raku.
+
+<!--more-->
+
+https://adventofcode.com/2015/day/5
+
+** Part One
+
+#+begin_quote
+Santa needs help figuring out which strings in his text file are naughty or nice ...
+
+How many strings are nice?
+#+end_quote
+
+#+begin_src raku :results output
+my $nice = 0;
+for '5-input.txt'.IO.lines {
+    next if +.match(/<[aeiou]>/, :exhaustive) < 3;
+    next unless .match(/(\w)$0/);
+    next if .contains('ab') or .contains('cd') or .contains('pq') or .contains('xy');
+    # .say
+    $nice++;
+}
+say "Found {$nice} nice strings";
+#+end_src
+
+#+RESULTS:
+: Found 255 nice strings
+
+** Part Two
+
+#+begin_quote
+Realizing the error of his ways, Santa has switched to a better model of determining whether a
+string is naughty or nice ...
+
+How many strings are nice under these new rules?
+#+end_quote
+
+#+begin_src raku :results output
+my $nice = 0;
+for '5-input.txt'.IO.lines {
+    next unless .match(/(\w\w).*$0/);
+    next unless .match(/(\w)\w$0/);
+    $nice++;
+}
+say "Found {$nice} nice strings";
+#+end_src
+
+#+RESULTS:
+: Found 55 nice strings

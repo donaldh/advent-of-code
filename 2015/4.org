@@ -1,0 +1,48 @@
+---
+title: "2015 AoC Day 4 – The Ideal Stocking Stuffer"
+date: 2015-11-04
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2015 day 4, written in Raku and Rust.
+
+<!--more-->
+
+https://adventofcode.com/2015/day/4
+
+** Part One
+
+#+begin_quote
+
+#+end_quote
+
+#+begin_src raku :results output :dir "/ssh:tosh:" :tangle "/ssh:tosh:aoc-day4.raku" :shebang "#!/usr/bin/env raku"
+my $input = 'iwrupvqb';
+
+use Digest::MD5;
+
+[346386..*].map: -> $i {
+    print '.' if $i mod 1000 == 0;
+    print $i if $i mod 10000 == 0;
+    my $csum = md5("{$input}{$i}")>>.fmt('%02x').join;
+    if $csum.starts-with('000000') {
+        say "{$i} gives {$csum}";
+        exit;
+    }
+}
+#+end_src
+
+#+RESULTS:
+: 000001dbbfa3a5c83a2d506429c7b00e
+
+
+** Part Two
+
+#+begin_quote
+
+#+end_quote

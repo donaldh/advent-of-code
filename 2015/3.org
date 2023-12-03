@@ -1,0 +1,94 @@
+---
+title: "2015 AoC Day 3 – Perfectly Spherical Houses in a Vacuum"
+date: 2015-11-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2015 day 3, written in Raku and Rust.
+
+<!--more-->
+
+https://adventofcode.com/2015/day/3
+
+** Part One
+
+#+begin_quote
+Santa is delivering presents to an infinite two-dimensional grid of houses ...
+
+How many houses receive at least one present?
+#+end_quote
+
+#+begin_src raku :results output
+my $input = slurp '3-input.txt';
+my $x = 0;
+my $y = 0;
+my %houses;
+
+%houses{"{$x}:{$y}"} += 1;
+
+for $input.comb -> $move {
+    given $move {
+        when '>' { $x++; }
+        when '<' { $x--; }
+        when '^' { $y++; }
+        when 'v' { $y--; }
+    }
+    %houses{"{$x}:{$y}"} += 1;
+}
+say +%houses.keys;
+#+end_src
+
+#+RESULTS:
+: 2081
+
+
+** Part Two
+
+#+begin_quote
+The next year, to speed up the process, Santa creates a robot version of himself, Robo-Santa, to
+deliver presents with him.
+
+Santa and Robo-Santa start at the same location (delivering two presents to the same starting
+house), then take turns moving based on instructions from the elf, who is eggnoggedly reading
+from the same script as the previous year.
+
+This year, how many houses receive at least one present?
+#+end_quote
+
+#+begin_src raku :results output
+my $input = slurp '3-input.txt';
+my $sx = 0;
+my $sy = 0;
+my $rx = 0;
+my $ry = 0;
+
+my %houses;
+%houses{"0:0"} += 2;
+
+for $input.comb -> $s, $r {
+    given $s {
+        when '>' { $sx++; }
+        when '<' { $sx--; }
+        when '^' { $sy++; }
+        when 'v' { $sy--; }
+    }
+    %houses{"{$sx}:{$sy}"} += 1;
+
+    given $r {
+        when '>' { $rx++; }
+        when '<' { $rx--; }
+        when '^' { $ry++; }
+        when 'v' { $ry--; }
+    }
+    %houses{"{$rx}:{$ry}"} += 1;
+}
+say +%houses.keys;
+#+end_src
+
+#+RESULTS:
+: 2341
