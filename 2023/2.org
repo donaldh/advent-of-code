@@ -1,6 +1,6 @@
 ---
 title: "2023 AoC Day 2 – Cube Conundrum"
-date: 2023-12-2
+date: 2023-12-02
 tags:
   - raku
 categories:
@@ -30,12 +30,13 @@ outer:
 for '2-input.txt'.IO.lines {
     my ($game, $plays) = .split(': ');
     $game = $game.split(' ')[1];
-    my @plays = $plays.split('; ')>>.comb(/\d+|\w+/)>>.map(-> $n, $c { $c => $n })>>.Bag;
+    my @plays = $plays.split('; '
+                            )>>.comb(/\d+|\w+/
+                                    )>>.map(-> $n, $c { $c => $n }
+                                           )>>.Bag;
 
     for @plays -> $p {
-        if $p<red> > $r or $p<green> > $g or $p<blue> > $b {
-            next outer;
-        }
+        next outer if $p<red> > $r or $p<green> > $g or $p<blue> > $b;
     }
     $total += $game;
 }
@@ -56,10 +57,14 @@ power of these sets?
 
 #+begin_src raku :results output
 my $total = 0;
+
 for '2-input.txt'.IO.lines {
     my ($game, $plays) = .split(': ');
-    $game = $game.comb(/\d+/)[0];
-    my @plays = $plays.split('; ')>>.comb(/\d+|\w+/)>>.map(-> $n, $c { $c => $n })>>.Bag;
+    $game = $game.split(' ')[1];
+    my @plays = $plays.split('; '
+                            )>>.comb(/\d+|\w+/
+                                    )>>.map(-> $n, $c { $c => $n }
+                                           )>>.Bag;
 
     my $r = @plays.map(-> $p { $p<red> }).max;
     my $g = @plays.map(-> $p { $p<green> }).max;
