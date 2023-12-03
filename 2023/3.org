@@ -1,0 +1,132 @@
+---
+title: "2023 AoC Day 3 – Gear Ratios"
+date: 2023-12-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 3, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/3]]
+
+** Part One
+
+#+begin_quote
+The engine schematic (your puzzle input) consists of a visual representation of the engine.
+There are lots of numbers and symbols you don't really understand, but apparently any number
+adjacent to a symbol, even diagonally, is a "part number" and should be included in your sum.
+
+What is the sum of all of the part numbers in the engine schematic?
+#+end_quote
+
+#+begin_src raku :results output
+my @s[140;140] = '3-input.txt'.IO.lines>>.comb;
+
+my @offsets = (-1, -1), (-1, 0), (-1, 1),
+              ( 0, -1),          ( 0, 1),
+              ( 1, -1), ( 1, 0), ( 1, 1);
+my $symbols = <* / % - + # @ = & $>.any;
+
+sub validate($x, $y) {
+    for @offsets -> ($dx, $dy) {
+        my $x2 = $x + $dx;
+        my $y2 = $y + $dy;
+        next if $x2 < 0 or $x2 > 139 or $y2 < 0 or $y2 > 139;
+        return True if @s[$y2;$x2] ~~ $symbols;
+    }
+    return False;
+}
+
+my $number = '';
+my $valid = False;
+my $total = 0;
+
+for ^140 -> $y {
+    for ^140 -> $x {
+        given my $c = @s[$y;$x] {
+            when /\d/ {
+                $number ~= $c;
+                $valid = True if validate($x, $y);
+            }
+            default {
+                # say $number if $number && $valid;
+                $total += $number if $number && $valid;
+                $number = ""; $valid = False;
+            }
+        }
+    }
+    # say $number if $number && $valid;
+    $total += $number if $number && $valid;
+    $number = ''; $valid = False;
+}
+say "Sum of part numbers is {$total}";
+#+end_src
+
+#+RESULTS:
+: Sum of part numbers is 514969
+
+** Part Two
+
+#+begin_quote
+A gear is any * symbol that is adjacent to exactly two part numbers. Its gear ratio is the
+result of multiplying those two numbers together.
+
+This time, you need to find the gear ratio of every gear and add them all up so that the
+engineer can figure out which gear needs to be replaced.
+
+What is the sum of all of the gear ratios in your engine schematic?
+#+end_quote
+
+#+begin_src raku :results output
+my @s[140;140] = '3-input.txt'.IO.lines>>.comb;
+
+my @offsets = (-1, -1), (-1, 0), (-1, 1),
+              ( 0, -1),          ( 0, 1),
+              ( 1, -1), ( 1, 0), ( 1, 1);
+
+sub adjacent-stars($x, $y) {
+    my @coords;
+    for @offsets -> ($dx, $dy) {
+        my $x2 = $x + $dx;
+        my $y2 = $y + $dy;
+        next if $x2 < 0 or $x2 > 139 or $y2 < 0 or $y2 > 139;
+        @coords.push("{$x2}:{$y2}") if @s[$y2;$x2] ~~ '*';
+    }
+    return @coords.Set.keys;
+}
+
+my $number = '';
+my $coords = SetHash.new();
+my %stars;
+
+for ^140 -> $y {
+    for ^140 -> $x {
+        given my $c = @s[$y;$x] {
+            when /\d/ {
+                $number ~= $c;
+                my @a = adjacent-stars($x, $y);
+                $coords.set: @a;
+            }
+            default {
+                if $number { %stars{$_}.push($number) for $coords.keys; }
+                $number = '';
+                $coords = SetHash.new();
+            }
+        }
+    }
+    if $number { %stars{$_}.push($number) for $coords.keys; }
+    $number = '';
+    $coords = SetHash.new();
+}
+my $sum = [+] %stars.values.grep(+* == 2).map(-> @a { [*] @a });
+say "Sum of gear ratios is {$sum}";
+#+end_src
+
+#+RESULTS:
+: Sum of gear ratios is 78915902
