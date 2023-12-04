@@ -1,0 +1,71 @@
+---
+title: "2023 AoC Day 4 – Scratchcards"
+date: 2023-12-04
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 4, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/4]]
+
+** Part One
+
+#+begin_quote
+As far as the Elf has been able to figure out, you have to figure out which of the numbers you
+have appear in the list of winning numbers. The first match makes the card worth one point and
+each match after the first doubles the point value of that card.
+
+How many points are they worth in total?
+#+end_quote
+
+#+begin_src raku :results output
+my $total = 0;
+for '4-input.txt'.IO.lines>>.split(': ') -> ($card, $numbers) {
+    my ($ours, $winning) = $numbers.split(' | ')>>.comb(/\d+/)>>.Set;
+    my $wins = ($ours (&) $winning).elems;
+    if $wins {
+        $total += 2 ** ($wins - 1);
+    }
+}
+say "Scratchcards are worth {$total} points";
+#+end_src
+
+#+RESULTS:
+: Scratchcards are worth 24733 points
+
+** Part Two
+
+#+begin_quote
+There's no such thing as "points". Instead, scratchcards only cause you to win more scratchcards
+equal to the number of winning numbers you have ...
+
+Process all of the original and copied scratchcards until no more scratchcards are won.
+Including the original set of scratchcards, how many total scratchcards do you end up with?
+#+end_quote
+
+#+begin_src raku :results output
+my @many;
+my $pos = 0;
+for '4-input.txt'.IO.lines>>.split(': ') -> ($card, $numbers) {
+    @many[$pos]++;
+    my ($ours, $winning) = $numbers.split(' | ')>>.comb(/\d+/)>>.Set;
+    my $wins = ($ours (&) $winning).elems;
+
+    if $wins {
+        my $n = @many[$pos];
+        @many[$_] += $n for $pos ^.. $pos + $wins;
+    }
+    $pos++;
+}
+say "End up with {[+] @many} scratchcards";
+#+end_src
+
+#+RESULTS:
+: End up with 5422730 scratchcards
