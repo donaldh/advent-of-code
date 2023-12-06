@@ -1,0 +1,101 @@
+---
+title: "2023 AoC Day 6 – Wait For It"
+date: 2023-12-6
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 6, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/6]]
+
+** Part One
+
+#+begin_quote
+To see how much margin of error you have, determine the number of ways you can beat the record
+in each race; in this example, if you multiply these values together, you get 288 (4 * 8 * 9).
+
+Determine the number of ways you could beat the record in each race. What do you get if you
+multiply these numbers together?
+#+end_quote
+
+For part 1, I took the simplest brute-force approach of testing every combination.
+
+#+begin_src raku :results output
+my @data = '6-input.txt'.IO.lines;
+
+my @times = @data[0].comb(/\d+/);
+my @distances = @data[1].comb(/\d+/);
+
+my @ways = gather for ^+@times -> $i {
+    my $time = @times[$i];
+    my $distance = @distances[$i];
+
+    print "Time {$time} and distance {$distance}";
+
+    my $ways = 0;
+    for 1..^$time -> $press-time {
+        my $travel-time = $time - $press-time;
+        $ways++ if $travel-time * $press-time > $distance;
+    }
+    say " has {$ways} ways";
+    take $ways;
+}
+say "Answer ", [*] @ways;
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: Time 59 and distance 597 has 34 ways
+: Time 79 and distance 1234 has 36 ways
+: Time 65 and distance 1032 has 10 ways
+: Time 75 and distance 1328 has 18 ways
+: Answer 220320
+: Took 0.01s
+
+** Part Two
+
+#+begin_quote
+As the race is about to start, you realize the piece of paper with race times and record
+distances you got earlier actually just has very bad kerning. There's really only one race -
+ignore the spaces between the numbers on each line.
+
+How many ways can you beat the record in this one much longer race?
+#+end_quote
+
+Part 2 has a considerably larger number range so it's worth choosing a more optimal approach.
+I'm sure there's a way to express this as an equation to solve but I was not in a maths frame of
+mind. So I just looked for an easy to apply optimisation of the brute-force approach.
+
+The lower and upper bounds are symmetrical so the loop can stop as soon as the lower bound is
+found and the total number of ways can be calculated from there.
+
+#+begin_src raku :results output
+my @data = '6-input.txt'.IO.lines;
+
+my $time = @data[0].comb(/\d+/).join.Int;
+my $distance = @data[1].comb(/\d+/).join.Int;
+
+say "Time {$time} and distance {$distance}";
+
+for 1..^$time -> $press-time {
+    my $travel-time = $time - $press-time;
+    if $travel-time * $press-time > $distance {
+        say $time - 2 * $press-time + 1, " ways";
+        last;
+    }
+}
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: Time 59796575 and distance 597123410321328
+: 12670863
+: 34454850 ways
+: Took 9.79s
