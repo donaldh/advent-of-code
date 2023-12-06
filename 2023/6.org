@@ -1,6 +1,6 @@
 ---
 title: "2023 AoC Day 6 – Wait For It"
-date: 2023-12-6
+date: 2023-12-06
 tags:
   - raku
 categories:
@@ -96,6 +96,5 @@ say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
 
 #+RESULTS:
 : Time 59796575 and distance 597123410321328
-: 12670863
 : 34454850 ways
-: Took 9.79s
+: Took 6.66s
