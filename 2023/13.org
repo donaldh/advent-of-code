@@ -1,0 +1,132 @@
+---
+title: "2023 AoC Day 13 – Point of Incidence"
+date: 2023-12-19T22:00:00Z
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 13, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/13]]
+
+** Part One
+
+#+begin_quote
+To summarize your pattern notes, add up the number of columns to the left of each vertical line
+of reflection; to that, also add 100 multiplied by the number of rows above each horizontal line
+of reflection. In the above example, the first pattern's vertical line has 5 columns to its left
+and the second pattern's horizontal line has 4 rows above it, a total of 405.
+
+Find the line of reflection in each of the patterns in your notes. What number do you get after
+summarizing all of your notes?
+#+end_quote
+
+Strategy:
+
+ + Look for an adjacent pair of matching strings
+ + Check whether successive outer pairs also match
+ + Stop at either end of array
+ + Create an array of vertical string slices to do the same for vertical reflections
+ + Calculate the summary total
+
+#+begin_src raku :results output
+my $input = slurp '13-input.txt';
+my @patterns = $input.split("\n\n");
+
+sub reflects(@lines, $a, $b) {
+    if $a < 0 { return True; }
+    if $b >= +@lines { return True; }
+
+    return @lines[$a] eq @lines[$b] && reflects(@lines, $a - 1, $b + 1);
+}
+
+sub find-reflection(@lines) {
+    for 1..^ +@lines -> $n {
+        return $n if reflects(@lines, $n - 1, $n);
+    }
+    return 0;
+}
+
+my @values = @patterns.map(
+    -> $p {
+        my @rows = $p.lines;
+        my $width = @rows[0].chars;
+        my @cols = (^$width).map(-> $x { @rows.map(*.comb[$x]).join });
+
+        [+] find-reflection(@cols)
+        +
+        [+] find-reflection(@rows).map(-> $n { $n * 100 })
+    });
+
+say [+] @values;
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: 33195
+: Took 0.10 seconds
+
+
+** Part Two
+
+#+begin_quote
+In each pattern, fix the smudge and find the different line of reflection. What number do you
+get after summarizing the new reflection line in each pattern in your notes?
+#+end_quote
+
+Strategy:
+
+ + Adapt the solution from part 1 to split the strings into arrays of characters
+ + Count the number of differences between each list of characters
+ + Choose a location with exactly 1 difference in reflected characters
+
+This solution could be generalised to solve parts 1 and 2.
+
+#+begin_src raku :results output
+my $input = slurp '13-input.txt';
+my @patterns = $input.split("\n\n");
+
+sub compare(@a, @b) {
+    [+] @a.kv.map(-> $k, $v { $v ne @b[$k] })
+}
+
+sub reflects(@lines, $a, $b) {
+    if $a < 0 { return 0; }
+    if $b >= +@lines { return 0; }
+
+    my $differences = compare(@lines[$a], @lines[$b]);
+    $differences += reflects(@lines, $a - 1, $b + 1);
+
+    return $differences;
+}
+
+sub find-reflection(@lines) {
+    for 1..^ +@lines -> $n {
+        return $n if reflects(@lines, $n - 1, $n) == 1;
+    }
+
+    return 0;
+}
+
+my @values = @patterns.map(
+    -> $p {
+        my @rows = $p.lines>>.comb;
+        my $width = +@rows[0];
+        my @cols = (^$width).map(-> $x { @rows.map(-> @r { @r[$x] }) });
+
+        [+] find-reflection(@cols) + [+] find-reflection(@rows).map(-> $n { $n * 100 })
+    });
+
+say [+] @values;
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: 31836
+: Took 0.18 seconds
