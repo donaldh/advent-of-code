@@ -1,0 +1,110 @@
+---
+title: "2023 AoC Day 8 – Haunted Wasteland"
+date: 2023-12-08
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 8, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/8]]
+
+** Part One
+
+#+begin_quote
+It seems like you're meant to use the left/right instructions to navigate the network. Perhaps
+if you have the camel follow the same instructions, you can escape the haunted wasteland!
+
+Starting at AAA, follow the left/right instructions. How many steps are required to reach ZZZ?
+#+end_quote
+
+Use the following approach:
+
+1. Transform the instructions into a list of ~1~ and ~0~ that can be used as array indices.
+2. Transform the input into a map of ~key => [left-val, right-val]~ where the values can be
+   picked by index.
+3. Repeatedly perform map lookups while lapping round the instructions.
+
+#+begin_src raku :results output
+my @lines = '8-input.txt'.IO.lines;
+my @instructions = @lines.shift.trans('RL' => '10').comb;
+@lines.shift;
+
+my %nodes = @lines.map(
+    -> $l {
+        my @w = $l.comb(/\w\w\w/);
+        @w[0] => @w[1,2]
+    });
+
+my $steps = 0;
+my $pos = 'AAA';
+while $pos ne 'ZZZ' {
+    my $rl = @instructions[$steps % +@instructions];
+    $pos = %nodes{$pos}[$rl];
+    $steps++;
+}
+say "Total {$steps} steps";
+#+end_src
+
+#+RESULTS:
+: Total 19631 steps
+
+
+** Part Two
+
+#+begin_quote
+Simultaneously start on every node that ends with A. How many steps does it take before you're
+only on nodes that end with Z?
+#+end_quote
+
+Part 2 suggests that each chain of nodes is a loop and looking at the input seems to confirm
+this. Looping continuously until all the chains synchronize on ~??Z~ might as well be an
+infinite loop if I want an answer this year.
+
+Find the length of each loop and then reduce to the [[https://docs.raku.org/routine/lcm][least common multiple]].
+
+#+begin_src raku :results output
+my @lines = '8-input.txt'.IO.lines;
+my @instructions = @lines.shift.trans('RL' => '10').comb;
+@lines.shift;
+
+my %nodes = @lines.map(
+    -> $l {
+        my @w = $l.comb(/\w\w\w/);
+        @w[0] => @w[1,2]
+    });
+
+my $steps = 0;
+my @start-pos = %nodes.keys.grep(*.ends-with('A'));
+
+my @steps = @start-pos.map(
+    -> $start {
+        my $steps = 0;
+        my $pos = $start;
+        while not $pos.ends-with('Z') {
+            my $rl = @instructions[$steps % +@instructions];
+            $pos = %nodes{$pos}[$rl];
+            $steps++;
+        }
+        $steps
+    });
+
+my $total-steps = [lcm] @steps;
+my $time = now - ENTER now;
+my $would-have = ($time / ([+] @steps) * $total-steps) / 86400;
+
+say "Total {$total-steps} steps";
+say "Took " ~ $time.base(10, 2) ~ "s";
+say "Would have taken circa " ~ $would-have.base(10, 0) ~ " days to brute-force";
+#+end_src
+
+#+RESULTS:
+: Total 21003205388413 steps
+: Took 0.14s
+: Would have taken circa 289 days to brute-force

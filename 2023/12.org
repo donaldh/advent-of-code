@@ -1,0 +1,176 @@
+---
+title: "2023 AoC Day 12 – Hot Springs"
+date: 2023-12-19
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 12, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/12]]
+
+** Part One
+
+#+begin_quote
+For each row, count all of the different arrangements of operational and broken springs that
+meet the given criteria. What is the sum of those counts?
+#+end_quote
+
+I started out with a brute-force approach that generates all patterns and then counts those that
+match the expected groupings. I was aiming for an easy to debug solution. This approach is quite
+memory hungry and slow.
+
+#+begin_src raku :results output
+my $total = 0;
+for '12-input.txt'.IO.lines {
+    my ($springs, $groups) = .split(' ');
+    my @groups = $groups.split(',')>>.Int;
+
+    my @patterns = [0],;
+
+    for $springs.comb -> $c {
+        given $c {
+            when '.' { for @patterns -> @p { @p.push(0) unless @p[*-1] == 0; } }
+            when '#' { for @patterns -> @p { @p[*-1] += 1; } }
+            when '?' {
+                my @clones = @patterns.map(-> @p { @p.clone; });
+                for @patterns -> @p { @p.push(0) unless @p[*-1] == 0; }
+                for @clones -> @c { @c[*-1] += 1; }
+                @patterns.append(@clones);
+            }
+        }
+    }
+    for @patterns -> @p { @p.pop if @p[*-1] == 0 }
+    my $arrangements = +@patterns.grep(-> @p { @p ~~ @groups });
+    $total += $arrangements;
+
+    # say "{$springs} -> {@groups} = {$arrangements}";
+}
+say "Sum of counts is {$total}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Sum of counts is 7506
+: Took 49.83 seconds
+
+** Part Two
+
+#+begin_quote
+As you look out at the field of springs, you feel like there are way more springs than the
+condition records list. When you examine the records, you discover that they were actually
+folded up this whole time!
+
+To unfold the records, on each row, replace the list of spring conditions with five copies of
+itself (separated by ?) and replace the list of contiguous groups of damaged springs with five
+copies of itself (separated by ,).
+
+Unfold your condition records; what is the new sum of possible arrangement counts?
+#+end_quote
+
+The unfolded dataset in part 2 needs a different approach. I tried running the solution from
+part 1 just to see how it fared and I was set to run out of ~64GB~ memory before completing the
+first few rows.
+
+I chose to switch to a recursive solution that would be easy to memoise, i.e. cache the results
+of recursive calls. I also applied some Raku optimisation patterns but these were probably
+unnecessary given how quickly it ran.
+
+#+begin_src raku :results output :tangle "12.raku" :shebang "#!/usr/bin/env raku"
+class Record {
+    has @.springs;
+    has @.groups;
+
+    has int $.nsprings;
+    has int $.ngroups;
+
+    has %.cache;
+
+    submethod TWEAK {
+        $!nsprings = +@!springs;
+        $!ngroups = +@!groups;
+    }
+
+    method count-arrangements(int \spos = 0, int \gpos = 0, int \count = 0) {
+        my $key = "{spos}:{gpos}:{count}";
+        return %!cache{$key} if %!cache{$key}:exists;
+
+        my $n = 0;
+
+        if spos == $!nsprings {
+            if gpos == $!ngroups && count == 0 {
+                $n = 1;
+            } elsif (gpos + 1) == $!ngroups && count == @!groups[gpos] {
+                $n = 1;
+            }
+        } else {
+
+            if gpos == $!ngroups && count > 0 {
+                # blown all groups
+            } elsif gpos < $!ngroups && count > @!groups[gpos] {
+                # blown this group
+            } else {
+                my $char = @!springs[spos];
+                if $char eq '.' {
+                    if count > 0 && count == @!groups[gpos] {
+                        $n = self.count-arrangements(spos + 1, gpos + 1);
+                    } elsif count == 0 {
+                        $n = self.count-arrangements(spos + 1, gpos);
+                    }
+                } elsif $char eq '#' {
+                    if count > 0 && count == @!groups[gpos] {
+                        # blown this group
+                    } else {
+                        $n = self.count-arrangements(spos + 1, gpos, count + 1);
+                    }
+                } else {
+                    # Try a '#'
+                    $n = self.count-arrangements(spos + 1, gpos, count + 1);
+
+                    # Try a '.'
+                    if count > 0 && count == @!groups[gpos] {
+                        $n += self.count-arrangements(spos + 1, gpos + 1);
+                    } elsif count == 0 {
+                        $n += self.count-arrangements(spos + 1, gpos);
+                    }
+                }
+            }
+        }
+
+        %!cache{$key} = $n;
+        return $n;
+    }
+}
+
+my @totals = '12-input.txt'.IO.lines.map(
+    -> $line {
+        my $start = now;
+        my ($springs, $groups) = $line.split(' ');
+
+        # Unfold for part 2
+        $springs = ($springs xx 5).join('?');
+        $groups = ($groups xx 5).join(',');
+
+        my @springs = $springs.comb;
+        my @groups = $groups.split(',')>>.Int;
+
+        my $row = Record.new(:@springs, :@groups);
+        my $total = $row.count-arrangements();
+
+        # say "{$line} - {$total} took " ~ (now - $start).base(10,2) ~ " seconds" ;
+        $total
+    });
+
+say "Sum of counts is {[+] @totals}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Sum of counts is 548241300348335
+: Took 2.60 seconds

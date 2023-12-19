@@ -1,0 +1,147 @@
+---
+title: "2023 AoC Day 7 – Camel Cards"
+date: 2023-12-07
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 7, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/7]]
+
+** Part One
+
+#+begin_quote
+Camel Cards is sort of similar to poker except it's designed to be easier to play while riding a
+camel.
+
+In Camel Cards, you get a list of hands, and your goal is to order them based on the strength of
+each hand. A hand consists of five cards labeled one of A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3,
+or 2. The relative strength of each card follows this order, where A is the highest and 2 is the
+lowest.
+
+Find the rank of every hand in your set. What are the total winnings?
+#+end_quote
+
+Simple strategy:
+
+1. Map card names to numeric values
+2. Pattern match on sorted bag of card counts to assign hand types
+3. Sort; first by hand type, then by successive card rank
+4. Calculate rank * bid
+
+#+begin_src raku :results output
+enum Type <HIGH ONE-PAIR TWO-PAIR THREE-KIND FULL-HOUSE FOUR-KIND FIVE-KIND>;
+
+class Hand {
+    has $.hand; has $.bid; has @.cards; has Type $.type;
+    submethod TWEAK {
+        @!cards = $!hand.trans('TJQKA' => 'abcde').comb>>.parse-base(16);
+
+        my @n = @!cards.Bag.values.sort.reverse;
+
+        if @n ~~ :(5,) { $!type = FIVE-KIND; }
+        elsif @n ~~ :(4, 1) { $!type = FOUR-KIND; }
+        elsif @n ~~ :(3, 2) { $!type = FULL-HOUSE; }
+        elsif @n ~~ :(3, 1, 1) { $!type = THREE-KIND; }
+        elsif @n ~~ :(2, 2, 1) { $!type = TWO-PAIR; }
+        elsif @n ~~ :(2, *@) { $!type = ONE-PAIR; }
+        else { $!type = HIGH; }
+    }
+}
+
+my $input = slurp '7-input.txt';
+my @hands = $input.lines>>.split(' ').map(
+    -> ($hand, $bid) { Hand.new(:$hand, :$bid) });
+
+sub sort-hands($a, $b) {
+    return Order::Less if $a.type < $b.type;
+    return Order::More if $a.type > $b.type;
+    for ^5 -> $i {
+        return Order::Less if $a.cards[$i] < $b.cards[$i];
+        return Order::More if $a.cards[$i] > $b.cards[$i];
+    }
+    return Order::Same;
+}
+
+my @sorted = @hands.sort(&sort-hands);
+
+say [+] @sorted.kv.map(-> $k, $v { ($k + 1) * $v.bid });
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: 252656917
+: Took 0.16s
+
+** Part Two
+
+#+begin_quote
+To make things a little more interesting, the Elf introduces one additional rule. Now, J cards
+are jokers - wildcards that can act like whatever card would make the hand the strongest type
+possible.
+
+To balance this, J cards are now the weakest individual cards, weaker even than 2. The other
+cards stay in the same order: A, K, Q, T, 9, 8, 7, 6, 5, 4, 3, 2, J ...
+
+Using the new joker rule, find the rank of every hand in your set. What are the new total
+winnings?
+#+end_quote
+
+Two modifications from part 1:
+
+1. Map ~J~ to ~1~ instead of ~11~
+2. Take ~J~ count out of the bag of card counts and add it to the highest count
+
+#+begin_src raku :results output
+enum Type <HIGH ONE-PAIR TWO-PAIR THREE-KIND FULL-HOUSE FOUR-KIND FIVE-KIND>;
+
+class Hand {
+    has $.hand; has $.bid; has @.cards; has Type $.type;
+    submethod TWEAK {
+        @!cards = $!hand.trans('TJQKA' => 'a1cde').comb>>.parse-base(16);
+
+        my $bag = @!cards.BagHash;
+        my $jokers = $bag{1}:delete // 0;
+        my @n = $bag.values.sort.reverse;
+        @n[0] += $jokers;
+
+        if @n ~~ :(5,) { $!type = FIVE-KIND; }
+        elsif @n ~~ :(4, 1) { $!type = FOUR-KIND; }
+        elsif @n ~~ :(3, 2) { $!type = FULL-HOUSE; }
+        elsif @n ~~ :(3, 1, 1) { $!type = THREE-KIND; }
+        elsif @n ~~ :(2, 2, 1) { $!type = TWO-PAIR; }
+        elsif @n ~~ :(2, *@) { $!type = ONE-PAIR; }
+        else { $!type = HIGH; }
+    }
+}
+
+my $input = slurp '7-input.txt';
+my @hands = $input.lines>>.split(' ').map(
+    -> ($hand, $bid) { Hand.new(:$hand, :$bid) });
+
+sub sort-hands($a, $b) {
+    return Order::Less if $a.type < $b.type;
+    return Order::More if $a.type > $b.type;
+    for ^5 -> $i {
+        return Order::Less if $a.cards[$i] < $b.cards[$i];
+        return Order::More if $a.cards[$i] > $b.cards[$i];
+    }
+    return Order::Same;
+}
+
+my @sorted = @hands.sort(&sort-hands);
+
+say [+] @sorted.kv.map(-> $k, $v { ($k + 1) * $v.bid });
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: 253499763
+: Took 0.17s

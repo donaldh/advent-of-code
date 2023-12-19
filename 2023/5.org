@@ -1,0 +1,180 @@
+---
+title: "2023 AoC Day 5 – If You Give A Seed A Fertilizer"
+date: 2023-12-05
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 5, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/5]]
+
+** Part One
+
+#+begin_quote
+The almanac (your puzzle input) lists all of the seeds that need to be planted. It also lists
+what type of soil to use with each kind of seed, what type of fertilizer to use with each kind
+of soil, what type of water to use with each kind of fertilizer, and so on. Every type of seed,
+soil, fertilizer and so on is identified with a number, but numbers are reused by each
+category - that is, soil 123 and fertilizer 123 aren't necessarily related to each other ...
+
+What is the lowest location number that corresponds to any of the initial seed numbers?
+#+end_quote
+
+#+begin_src raku :results output
+class MappingEntry {
+    has Int $.to;
+    has Int $.from;
+    has Int $.length;
+}
+
+class Mapping {
+    has @.entries;
+
+    method eval(Int $input) {
+        for @!entries -> $m {
+            if $m.from <= $input and $input < ($m.from + $m.length) {
+                return $input + $m.to - $m.from;
+            }
+        }
+        return $input;
+    }
+}
+
+my @sections = slurp('5-input.txt').split("\n\n");
+my @seeds = @sections.shift.comb(/\d+/)>>.Int;
+my @mappings;
+
+for @sections -> $s {
+    my @lines = $s.lines; @lines.shift;
+    my @entries = @lines.map({ .split(' ')>>.Int}).map(
+        -> ($to, $from, $length) {
+            MappingEntry.new(:$to, :$from, :$length)
+        });
+    @mappings.push(Mapping.new(:@entries));
+}
+
+my @locations = @seeds.map(
+    -> $s {
+        my $value = $s;
+        for @mappings -> $m {
+            $value = $m.eval($value);
+        };
+        $value
+    });
+
+say "Lowest location number is {@locations.min}";
+#+end_src
+
+#+RESULTS:
+: Lowest location number is 157211394
+
+
+** Part Two
+
+#+begin_quote
+Re-reading the almanac, it looks like the seeds: line actually describes ranges of seed numbers.
+
+The values on the initial seeds: line come in pairs. Within each pair, the first value is the
+start of the range and the second value is the length of the range ...
+
+Consider all of the initial seed numbers listed in the ranges on the first line of the almanac.
+What is the lowest location number that corresponds to any of the initial seed numbers?
+#+end_quote
+
+There is certainly a better strategy than brute-force for part 2 but, short on time to refactor
+it, I let it run and had the results later in the day.
+
+#+begin_src raku :results output :tangle "/ssh:tosh:5.raku" :shebang "#!/usr/bin/env raku"
+class MappingEntry {
+    has Int $.to;
+    has Int $.from;
+    has Int $.length;
+}
+
+class Mapping {
+    has @.entries;
+
+    method eval(Int $input) {
+        for @!entries -> $m {
+            if $m.from <= $input and $input < ($m.from + $m.length) {
+                return $input + $m.to - $m.from;
+            }
+        }
+        return $input;
+    }
+}
+
+my @sections = slurp('5-input.txt').split("\n\n");
+my @seeds = @sections.shift.comb(/\d+/)>>.Int;
+my @mappings;
+
+for @sections -> $s {
+    my @lines = $s.lines; @lines.shift;
+    my @entries = @lines.map({ .split(' ')>>.Int}).map(
+        -> ($to, $from, $length) {
+            MappingEntry.new(:$to, :$from, :$length)
+        });
+    @mappings.push(Mapping.new(:@entries));
+}
+
+sub apply($s) {
+    my $value = $s;
+    for @mappings -> $m {
+        $value = $m.eval($value);
+    };
+    $value
+}
+
+@seeds .= map(
+    -> $a, $b { $a, $b }
+);
+
+my @locations = @seeds.race(:batch(1)).map(
+    -> ($start, $length) {
+        say "{$start} .. {$start + $length}";
+        my $min = Inf;
+        for $start..^ $start + $length -> $s {
+            print "." if $s %% 1_000_000;
+            $min = min(apply($s), $min);
+        };
+        $min
+    }).list;
+
+say "\nLowest location number is {@locations.min}";
+say "Took " ~ (now - ENTER now) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: [(194657215 187012821) (1093203236 6077151) (44187305 148722449) (2959577030 152281079) (3400626717 198691716) (1333399202 287624830) (2657325069 35258407) (1913289352 410917164) (1005856673 850939) (839895010 162018909)]
+
+#+begin_example
+194657215 .. 381670036
+...........................................................................................................................................................................................1093203236 .. 1099280387
+......
+44187305 .. 192909754
+....................................................................................................................................................
+2959577030 .. 3111858109
+........................................................................................................................................................
+3400626717 .. 3599318433
+.......................................................................................................................................................................................................
+1333399202 .. 1621024032
+................................................................................................................................................................................................................................................................................................
+2657325069 .. 2692583476
+...................................
+1913289352 .. 2324206516
+...........................................................................................................................................................................................................................................................................................................................................................................................................................
+1005856673 .. 1006707612
+.
+839895010 .. 1001913919
+..................................................................................................................................................................
+Lowest location number is 50855035
+#+end_example
+
+Yeah, that's a ~.~ for every million.

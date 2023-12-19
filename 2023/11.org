@@ -1,0 +1,145 @@
+---
+title: "2023 AoC Day 11 – Cosmic Expansion"
+date: 2023-12-11
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 11, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/11]]
+
+** Part One
+
+#+begin_quote
+The researcher is trying to figure out the sum of the lengths of the shortest path between every
+pair of galaxies. However, there's a catch: the universe expanded in the time it took the light
+from those galaxies to reach the observatory.
+
+Due to something involving gravitational effects, only some space expands. In fact, the result
+is that any rows or columns that contain no galaxies should all actually be twice as big.
+
+Expand the universe, then find the length of the shortest path between every pair of galaxies.
+What is the sum of these lengths?
+#+end_quote
+
+Strategy:
+
++ Convert the input into a list of coordinates.
++ Summarise ~x~ coordinates in a bag and grep for empty columns. The input has no empty rows.
++ Iterate empty columns, from highest first, and increment all higher ~x~ coordinates.
++ Calcluate the sum of distances between ~combinations~ of 2 coordinates.
+
+#+begin_src raku :results output
+my @coords = gather {
+    for '11-input.txt'.IO.lines.kv -> $row, $str {
+        for $str.comb.kv -> $col, $char {
+            take ($col, $row) if $char eq '#';
+        }
+    }
+}
+
+my $bag = @coords.map(-> @coord { @coord[0] }).Bag;
+my @columns = (^140).grep(-> $i { $bag{$i}:exists == False });
+
+for @columns.reverse -> $col {
+    @coords .= map(-> ($x, $y) { $x > $col ?? $x + 1 !! $x, $y });
+}
+
+say [+] @coords.combinations(2).map(
+    -> (@a, @b) { abs(@b[1] - @a[1]) + abs(@b[0] - @a[0]) });
+#+end_src
+
+#+RESULTS:
+: 9521550
+
+
+** Part Two
+
+#+begin_quote
+The galaxies are much older (and thus much farther apart) than the researcher initially
+estimated.
+
+Now, instead of the expansion you did before, make each empty row or column one million times
+larger. That is, each empty row should be replaced with 1000000 empty rows, and each empty
+column should be replaced with 1000000 empty columns.
+
+Starting with the same initial image, expand the universe according to these new rules, then
+find the length of the shortest path between every pair of galaxies. What is the sum of these
+lengths?
+#+end_quote
+
+The only difference needed in part 2 is a larger increment.
+
+#+begin_src raku :results output
+my @coords = gather {
+    for '11-input.txt'.IO.lines.kv -> $row, $str {
+        for $str.comb.kv -> $col, $char {
+            take ($col, $row) if $char eq '#';
+        }
+    }
+}
+
+my $bag = @coords.map(-> @coord { @coord[0] }).Bag;
+my @columns = (^140).grep(-> $i { $bag{$i}:exists == False });
+
+for @columns.reverse -> $col {
+    @coords .= map(-> ($x, $y) { $x > $col ?? $x + 999_999 !! $x, $y });
+}
+
+say [+] @coords.combinations(2).map(
+    -> (@a, @b) { abs(@b[1] - @a[1]) + abs(@b[0] - @a[0]) });
+#+end_src
+
+#+RESULTS:
+: 298932923702
+
+** Refactoring
+
+Here is a refactoring of the code to handle both parts:
+
+#+begin_src raku :results output
+my @galaxies = gather {
+    for '11-input.txt'.IO.lines.kv -> $row, $str {
+        for $str.comb.kv -> $col, $char {
+            take ($col, $row) if $char eq '#';
+        }
+    }
+}
+
+sub calculate(@galaxies, $multiplier) {
+    my @coords = @galaxies;
+
+    my $bag = @coords.map(-> @coord { @coord[0] }).Bag;
+    my @columns = (^140).grep(-> $i { $bag{$i}:exists == False });
+
+    for @columns.reverse -> $col {
+        @coords .= map(
+            -> ($x, $y) {
+                $x > $col ?? $x + $multiplier - 1 !! $x, $y
+            });
+    }
+
+    [+] @coords.combinations(2).map(
+        -> (@a, @b) {
+            abs(@b[1] - @a[1]) + abs(@b[0] - @a[0])
+        });
+}
+
+say "Part 1";
+say calculate(@galaxies, 2);
+say "Part 2";
+say calculate(@galaxies, 1_000_000);
+#+end_src
+
+#+RESULTS:
+: Part 1
+: 9521550
+: Part 2
+: 298932923702

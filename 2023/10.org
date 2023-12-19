@@ -1,0 +1,325 @@
+---
+title: "2023 AoC Day 10 – Pipe Maze"
+date: 2023-12-10
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 10, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/10]]
+
+** Part One
+
+#+begin_quote
+The pipes are arranged in a two-dimensional grid of tiles:
+
+- ~|~ is a vertical pipe connecting north and south.
+- ~-~ is a horizontal pipe connecting east and west.
+- ~L~ is a 90-degree bend connecting north and east.
+- ~J~ is a 90-degree bend connecting north and west.
+- ~7~ is a 90-degree bend connecting south and west.
+- ~F~ is a 90-degree bend connecting south and east.
+- ~.~ is ground; there is no pipe in this tile.
+- ~S~ is the starting position of the animal; there is a pipe on this tile, but your sketch
+  doesn't show what shape the pipe has.
+
+Based on the acoustics of the animal's scurrying, you're confident the pipe that contains the
+animal is one large, continuous loop ...
+
+Find the single giant loop starting at ~S~. How many steps along the loop does it take to get
+from the starting position to the point farthest from the starting position?
+#+end_quote
+
+Strategy:
+
++ Parse the input into a 2 dimensional array
++ Use ~grep~ to find the ~S~ start location
++ Path walk using a ~given~ / ~when~ decision ladder
+
+#+begin_src raku :results output
+enum Direction <North East South West>;
+
+my @input = '10-input.txt'.IO.lines>>.comb;
+my $width = +@input[0];
+my $height = +@input;
+
+my @grid[$height;$width] = @input;
+my ($start-y, $start-x) = @grid.kv.grep(-> @k, $v { $v eq 'S' })[0][0];
+my $y = $start-y; my $x = $start-x;
+
+my $dir = South;
+my $length = 0;
+my $done = False;
+while !$done {
+    $length += 1;
+    given $dir {
+        when North {
+            $y -= 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when '7' { $dir = West; }
+                when 'F' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when South {
+            $y += 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when 'J' { $dir = West; }
+                when 'L' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when East {
+            $x += 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'J' { $dir = North; }
+                when '7' { $dir = South; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when West {
+            $x -= 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'F' { $dir = South; }
+                when 'L' { $dir = North; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+    }
+}
+
+say "Steps to furthest {$length / 2}";
+#+end_src
+
+#+RESULTS:
+: Steps to furthest 6907
+
+
+** Part Two
+
+#+begin_quote
+You quickly reach the farthest point of the loop, but the animal never emerges. Maybe its nest
+is within the area enclosed by the loop?
+
+To determine whether it's even worth taking the time to search for such a nest, you should
+calculate how many tiles are contained within the loop ...
+
+Figure out whether you have time to search for the nest by calculating the area within the loop.
+How many tiles are enclosed by the loop?
+#+end_quote
+
+This turned out to be the biggest step up from part 1 to part 2 so far this year. I tried
+scanning the grid to count crossed edges but that didn't work out.
+
+Instead I decided on this strategy:
+
++ Clear the grid of spurious pipe segments by setting non-path tiles to ~.~.
++ Repeat the path walk and flood fill any ~.~ chars to the right (inside) of the path.
+
+The solution is verbose, with 2 copies (with differences) of the ~given~ / ~when~ ladder. I
+spent enough time getting a solution that I'm not too bothered about any clean-up refactoring.
+
+There's some bonus [[https://www.man7.org/linux/man-pages/man3/ncurses.3x.html][curses]] animation which helped me with the debugging.
+
+#+begin_src raku :results output :tangle "10b.raku" :shebang "#!/usr/bin/env raku"
+use NCurses;
+enum Direction <North East South West>;
+
+my $win = initscr();
+start_color;
+init_pair(1, COLOR_BLUE, COLOR_BLACK);
+init_pair(2, COLOR_WHITE, COLOR_BLACK);
+init_pair(3, COLOR_BLACK, COLOR_GREEN);
+init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+
+my @input = '10-input.txt'.IO.lines>>.comb;
+my $width = +@input[0];
+my $height = +@input;
+
+my @grid[$height;$width] = @input;
+my @pipe[$height;$width];
+
+my ($start-y, $start-x) = @grid.kv.grep(-> @k, $v { $v eq 'S' })[0][0];
+my $y = $start-y; my $x = $start-x;
+
+my $dir = South;
+my $length = 0;
+my $done = False;
+while !$done {
+    @pipe[$y;$x] = 1;
+    $length += 1;
+    given $dir {
+        when North {
+            $y -= 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when '7' { $dir = West; }
+                when 'F' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when South {
+            $y += 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when 'J' { $dir = West; }
+                when 'L' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when East {
+            $x += 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'J' { $dir = North; }
+                when '7' { $dir = South; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when West {
+            $x -= 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'F' { $dir = South; }
+                when 'L' { $dir = North; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+    }
+}
+
+for ^$height -> $y {
+    for ^$width -> $x {
+        my $pipe = @pipe[$y;$x] // 0 == 1;
+        @grid[$y;$x] = '.' if !$pipe;
+        my $color =  $pipe ?? 1 !! 2;
+        color_set($color, 0);
+        mvaddstr($y, $x, @grid[$y;$x]);
+    }
+}
+nc_refresh;
+
+$y = $start-y; $x = $start-x;
+$dir = South;
+$done = False;
+
+sub check-inside($ny, $nx) {
+    my $y = $ny; my $x = $nx;
+
+    my @matrix = (-1, -1), (-1, 0), (-1, 1),
+                 ( 0, -1),          ( 0, 1),
+                 ( 1, -1), ( 1, 0), ( 1, 1);
+
+    return if @grid[$y;$x] ne '.';
+
+    my $done = False;
+    repeat {
+        @grid[$y;$x] = 'I';
+        color_set(3, 0);
+        mvaddstr($y, $x, 'I');
+        nc_refresh;
+        sleep 0.0002;
+        my @next = @matrix
+                    .map(-> ($dy, $dx) { $y + $dy, $x + $dx })
+                    .grep(-> ($y, $x) {
+                                 $x >= 0 && $x < $width &&
+                                         $y >=0 && $y < $height &&
+                                                @grid[$y;$x] eq '.' });
+        if +@next {
+            ($y, $x) = @next[0];
+        } else {
+            $done = True;
+        }
+    } while !$done;
+}
+
+while !$done {
+    sleep 0.0002;
+    color_set(4, 0);
+    mvaddstr($y, $x, @grid[$y;$x]);
+    nc_refresh;
+    given $dir {
+        when North {
+            check-inside($y, $x+1);
+            $y -= 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when '7' { $dir = West; }
+                when 'F' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when South {
+            check-inside($y, $x-1);
+            $y += 1;
+            given @grid[$y;$x] {
+                when '|' { }
+                when 'J' { $dir = West; }
+                when 'L' { $dir = East; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when East {
+            check-inside($y+1, $x);
+            $x += 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'J' { $dir = North; }
+                when '7' { $dir = South; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+        when West {
+            check-inside($y-1, $x);
+            $x -= 1;
+            given @grid[$y;$x] {
+                when '-' { }
+                when 'F' { $dir = South; }
+                when 'L' { $dir = North; }
+                when 'S' { $done = True; }
+                default { say "Broken."; exit; }
+            }
+        }
+    }
+}
+
+my @inside = @grid.grep(* eq 'I');
+
+mvaddstr($height + 1, 0, "{+@inside} tiles inside");
+nc_refresh;
+
+getch;
+
+LEAVE {
+    delwin($win) if $win;
+    endwin;
+}
+#+end_src
+
+*** Results
+
+Here's a visualization of the result:
+
+[[file:10-result.png]]

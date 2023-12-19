@@ -1,0 +1,96 @@
+---
+title: "2023 AoC Day 9 – Mirage Maintenance"
+date: 2023-12-09
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 9, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/9]]
+
+** Part One
+
+#+begin_quote
+Analyze your OASIS report and extrapolate the next value for each history. What is the sum of
+these extrapolated values?
+#+end_quote
+
+Strategy:
+
++ Recursively calculate the differences
++ Stop when all values are identical (don't need to reach zero)
++ Return this difference value
++ Return difference + last-value as the recursion unwinds
+
+#+begin_src raku :results output
+sub produce(@numbers) {
+    return @numbers[0] if [==] @numbers;
+
+    my @differences =
+        (1..^ +@numbers).map(
+            -> $i { @numbers[$i] - @numbers[$i - 1] }
+        );
+    return @numbers[*-1] + produce(@differences);
+}
+
+say [+] '9-input.txt'.IO.lines.map(
+    -> $line {
+        my @numbers = $line.split(' ')>>.Int;
+        produce(@numbers);
+    });
+#+end_src
+
+#+RESULTS:
+: 1647269739
+
+** Part Two
+
+#+begin_quote
+Analyze your OASIS report again, this time extrapolating the previous value for each history.
+What is the sum of these extrapolated values?
+#+end_quote
+
+Refactor part 1 into a subroutine that takes a function to calculate the desired "next" value:
+
++ ~@numbers[*-1] + $diff~
++ ~@numbers[0] - $diff~
+
+#+begin_src raku :results output
+sub produce(@numbers, &func) {
+    return @numbers[0] if [==] @numbers;
+
+    my @differences =
+        (1..^ +@numbers).map(
+            -> $i { @numbers[$i] - @numbers[$i - 1] }
+        );
+    return func(@numbers, produce(@differences, &func));
+}
+
+sub day-nine(&func) {
+    [+] '9-input.txt'.IO.lines.map(
+        -> $line {
+            my @numbers = $line.split(' ')>>.Int;
+            produce(@numbers, &func);
+        });
+}
+
+say 'Part 1';
+say day-nine(-> @numbers, $diff { @numbers[*-1] + $diff });
+say '';
+say 'Part 2';
+say day-nine(-> @numbers, $diff { @numbers[0] - $diff });
+#+end_src
+
+#+RESULTS:
+: Part 1
+: 1647269739
+: 
+: Part 2
+: 864
