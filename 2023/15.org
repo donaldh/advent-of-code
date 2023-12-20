@@ -1,0 +1,114 @@
+---
+title: "2023 AoC Day 15 – Lens Library"
+date: 2023-12-20T19:00:00Z
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 15, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/15]]
+
+** Part One
+
+#+begin_quote
+Run the HASH algorithm on each step in the initialization sequence. What is the sum of the
+results?
+#+end_quote
+
+#+begin_src raku :results output
+my @steps = '15-input.txt'.IO.slurp.trim.split(',');
+my @hashes = @steps.map(
+    -> $step {
+        my $cur-val = 0;
+        for $step.comb -> $c {
+            $cur-val += $c.ord;
+            $cur-val *= 17;
+            $cur-val %= 256;
+        }
+        $cur-val
+    });
+
+say "Sum of hashes is {[+] @hashes}";
+#+end_src
+
+#+RESULTS:
+: Sum of hashes is 514639
+
+
+** Part Two
+
+#+begin_quote
+With the help of an over-enthusiastic reindeer in a hard hat, follow the initialization
+sequence. What is the focusing power of the resulting lens configuration?
+#+end_quote
+
+#+begin_src raku :results output
+class Slot {
+    has $.label;
+    has $.focal is rw;
+}
+
+class Box {
+    has @.slots;
+}
+
+sub hash($str) {
+    my $cur-val = 0;
+    for $str.comb -> $c {
+        $cur-val += $c.ord;
+        $cur-val *= 17;
+        $cur-val %= 256;
+    }
+    $cur-val
+}
+
+my @boxes = (^256).map({Box.new});
+my @steps = '15-input.txt'.IO.slurp.trim.split(',');
+
+for @steps -> $step {
+    my ($label, $op, $focal) = $step.match(/^(\w+)(<[=-]>)(\d)?$/).list>>.Str;
+
+    my $box-num = hash($label);
+    my $box = @boxes[$box-num];
+
+    given $op {
+        when '=' {
+            my $done = False;
+            for $box.slots.kv -> $k, $slot {
+                if $slot.label eq $label {
+                    $slot.focal = $focal;
+                    $done = True;
+                }
+            }
+            $box.slots.push(Slot.new(:$label, :$focal)) if not $done;
+        }
+        when '-' {
+            for $box.slots.kv -> $k, $slot {
+                if $slot.label eq $label {
+                    $box.slots.splice($k, 1);
+                }
+            }
+        }
+    }
+}
+
+my @powers = @boxes.kv.map(
+    -> $num, $box {
+        $box.slots.kv.map(
+            -> $index, $slot {
+                ($num + 1) * ($index + 1) * $slot.focal
+            });
+    }).flat;
+
+say "Focusing power is {[+] @powers}";
+#+end_src
+
+#+RESULTS:
+: Focusing power is 279470
