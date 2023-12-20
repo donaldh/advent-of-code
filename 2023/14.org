@@ -1,0 +1,176 @@
+---
+title: "2023 AoC Day 14 – Parabolic Reflector Dish"
+date: 2023-12-19T22:30:00Z
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+draft: true
+---
+
+This is a solution to Advent of Code 2023 day 14, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/14]]
+
+** Part One
+
+#+begin_quote
+Tilt the platform so that the rounded rocks all roll north. Afterward, what is the total load on
+the north support beams?
+#+end_quote
+
+#+begin_src raku :results output
+my @grid[100;100] = '14-input.txt'.IO.lines>>.comb;
+
+my $moved;
+repeat {
+    $moved = 0;
+    for 1..^100 -> $y {
+        for ^100 -> $x {
+            if @grid[$y;$x] eq 'O' && @grid[$y-1;$x] eq '.' {
+                @grid[$y-1;$x] = 'O';
+                @grid[$y;$x] = '.';
+                $moved += 1;
+            }
+        }
+    }
+} while $moved > 0;
+
+my $total = [+] (^100).map(
+                -> $y {
+                    [+] (^100).map(
+                        -> $x {
+                            (100 - $y) if @grid[$y;$x] eq 'O'
+                        })
+                });
+
+say "Total load is {$total}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Total load is 108792
+: Took 0.30 seconds
+
+
+** Part Two
+
+#+begin_quote
+The parabolic reflector dish deforms, but not in a way that focuses the beam. To do that, you'll
+need to move the rocks to the edges of the platform. Fortunately, a button on the side of the
+control panel labeled "spin cycle" attempts to do just that!
+
+Each cycle tilts the platform four times so that the rounded rocks roll north, then west, then
+south, then east. After each tilt, the rounded rocks roll as far as they can before the platform
+tilts in the next direction. After one cycle, the platform will have finished rolling the
+rounded rocks in those four directions in that order...
+
+Run the spin cycle for 1000000000 cycles. Afterward, what is the total load on the north support
+beams?
+#+end_quote
+
+#+begin_src raku :results output :tangle "aoc-14.raku" :shebang "#!/usr/bin/env raku"
+constant \size = 100;
+my @grid[size;size] = '14-input.txt'.IO.lines>>.comb;
+
+my %totals-to-cycle;
+my @totals-by-cycle;
+
+my $moved;
+for ^500 -> $cycle {
+    # North
+    repeat {
+        $moved = 0;
+        for 1..^size -> \y {
+            for ^size -> \x {
+                if @grid[y; x] eq 'O' && @grid[y - 1; x] eq '.' {
+                    @grid[y - 1; x] = 'O';
+                    @grid[y; x] = '.';
+                    $moved += 1;
+                }
+            }
+        }
+    } while $moved > 0;
+
+    # West
+    repeat {
+        $moved = 0;
+        for ^size -> \y {
+            for 1..^size -> \x {
+                if @grid[y; x] eq 'O' && @grid[y; x - 1] eq '.' {
+                    @grid[y; x - 1] = 'O';
+                    @grid[y; x] = '.';
+                    $moved += 1;
+                }
+            }
+        }
+    } while $moved > 0;
+
+    # South
+    repeat {
+        $moved = 0;
+        for 1..^size -> \y {
+            for ^size -> \x {
+                if @grid[y - 1; x] eq 'O' && @grid[y; x] eq '.' {
+                    @grid[y; x] = 'O';
+                    @grid[y - 1; x] = '.';
+                    $moved += 1;
+                }
+            }
+        }
+    } while $moved > 0;
+
+    # East
+    repeat {
+        $moved = 0;
+        for ^size -> \y {
+            for 1..^size -> \x {
+                if @grid[y; x-1] eq 'O' && @grid[y; x] eq '.' {
+                    @grid[y; x] = 'O';
+                    @grid[y; x-1] = '.';
+                    $moved += 1;
+                }
+            }
+        }
+    } while $moved > 0;
+
+    my $total = [+] (^size).map(
+                    -> \y {
+                        [+] (^size).map(
+                            -> \x {
+                                (size - y) if @grid[y; x] eq 'O'
+                            })
+                    });
+    print '.';
+
+    if %totals-to-cycle{$total}:exists {
+        my $prev-cycle = %totals-to-cycle{$total};
+        if $prev-cycle > 5 && (@totals-by-cycle[$prev-cycle-5 .. $prev-cycle]
+                               ~~ @totals-by-cycle[$cycle-5 .. $cycle]) {
+            my $cycle-length = $cycle - $prev-cycle;
+            my $pos-in-cycle = (1_000_000_000 - $cycle) % $cycle-length;
+            my $abs-pos = $cycle - $cycle-length + $pos-in-cycle - 1;
+            my $load = @totals-by-cycle[$abs-pos];
+
+            # say "\nprev={$prev-cycle}, len={$cycle-length}, abs={$abs-pos}";
+            say "\nTotal load is {$load}";
+            last;
+        }
+    }
+
+    %totals-to-cycle{$total} = $cycle;
+    @totals-by-cycle[$cycle] = $total;
+}
+
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: ...............
+: Total load is 64
+: Took 0.11 seconds
+
