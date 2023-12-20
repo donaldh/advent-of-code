@@ -102,23 +102,23 @@ my @totals-by-cycle;
 my $moved;
 for ^500 -> $cycle {
     # North
-    repeat {
-        $moved = 0;
-        for 1..^size -> \y {
-            for ^size -> \x {
+    for ^size -> \x {
+        repeat {
+            $moved = 0;
+            for 1..^size -> \y {
                 if @grid[y; x] eq 'O' && @grid[y - 1; x] eq '.' {
                     @grid[y - 1; x] = 'O';
                     @grid[y; x] = '.';
                     $moved += 1;
                 }
             }
-        }
-    } while $moved > 0;
+        } while $moved > 0;
+    }
 
     # West
-    repeat {
-        $moved = 0;
-        for ^size -> \y {
+    for ^size -> \y {
+        repeat {
+            $moved = 0;
             for 1..^size -> \x {
                 if @grid[y; x] eq 'O' && @grid[y; x - 1] eq '.' {
                     @grid[y; x - 1] = 'O';
@@ -126,27 +126,27 @@ for ^500 -> $cycle {
                     $moved += 1;
                 }
             }
-        }
-    } while $moved > 0;
+        } while $moved > 0;
+    }
 
     # South
-    repeat {
-        $moved = 0;
-        for 1..^size -> \y {
-            for ^size -> \x {
+    for ^size -> \x {
+        repeat {
+            $moved = 0;
+            for 1..^size -> \y {
                 if @grid[y - 1; x] eq 'O' && @grid[y; x] eq '.' {
                     @grid[y; x] = 'O';
                     @grid[y - 1; x] = '.';
                     $moved += 1;
                 }
             }
-        }
-    } while $moved > 0;
+        } while $moved > 0;
+    }
 
     # East
-    repeat {
-        $moved = 0;
-        for ^size -> \y {
+    for ^size -> \y {
+        repeat {
+            $moved = 0;
             for 1..^size -> \x {
                 if @grid[y; x-1] eq 'O' && @grid[y; x] eq '.' {
                     @grid[y; x] = 'O';
@@ -154,8 +154,8 @@ for ^500 -> $cycle {
                     $moved += 1;
                 }
             }
-        }
-    } while $moved > 0;
+        } while $moved > 0;
+    }
 
     my $total = [+] (^size).map(
                     -> \y {
@@ -189,5 +189,6 @@ say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
 #+end_src
 
 #+RESULTS:
+: 
 : Total load is 99118
-: Took 159.43 seconds
+: Took 58.03 seconds
