@@ -1,0 +1,180 @@
+---
+title: "2023 AoC Day 16 – The Floor Will Be Lava"
+date: 2023-12-16
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 16, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/16]]
+
+** Part One
+
+#+begin_quote
+The light isn't energizing enough tiles to produce lava; to debug the contraption, you need to
+start by analyzing the current situation. With the beam starting in the top-left heading right,
+how many tiles end up being energized?
+#+end_quote
+
+#+begin_src raku :results output
+constant \size = 110;
+my @grid[size;size] = '16-input.txt'.IO.lines>>.comb;
+my @energized[size;size];
+my %visited;
+
+enum Direction <North East South West>;
+
+sub trace($x is copy, $y is copy, $dir is copy) {
+    loop {
+        @energized[$y;$x] = '#';
+        given @grid[$y;$x] {
+            when '\\' {
+                given $dir {
+                    when North { $dir = West; }
+                    when South { $dir = East; }
+                    when East { $dir = South; }
+                    when West { $dir = North; }
+                }
+            }
+            when '/' {
+                given $dir {
+                    when North { $dir = East; }
+                    when South { $dir = West; }
+                    when East { $dir = North; }
+                    when West { $dir = South; }
+                }
+            }
+            when '|' {
+                given $dir {
+                    when East | West {
+                        trace($x, $y, North);
+                        trace($x, $y, South);
+                        return;
+                    }
+                }
+            }
+            when '-' {
+                given $dir {
+                    when North | South {
+                        trace($x, $y, East);
+                        trace($x, $y, West);
+                        return;
+                    }
+                }
+            }
+        }
+
+        given $dir {
+            when North { $y -= 1; return if $y < 0; }
+            when South { $y += 1; return if $y >= size; }
+            when East { $x += 1; return if $x >= size; }
+            when West { $x -= 1; return if $x < 0; }
+        }
+        return if %visited{"{$x},{$y},{$dir}"}:exists;
+        %visited{"{$x},{$y},{$dir}"} = True;
+    }
+}
+trace(0, 0, East);
+my $total = +@energized.grep(-> $c { $c.defined && $c eq '#'} );
+say "Total energized {$total}";
+#+end_src
+
+#+RESULTS:
+: Total energized 6994
+
+
+** Part Two
+
+#+begin_quote
+So, the beam could start on any tile in the top row (heading downward), any tile in the bottom
+row (heading upward), any tile in the leftmost column (heading right), or any tile in the
+rightmost column (heading left). To produce lava, you need to find the configuration that
+energizes as many tiles as possible.
+
+Find the initial beam configuration that energizes the largest number of tiles; how many tiles
+are energized in that configuration?
+#+end_quote
+
+#+begin_src raku :results output
+constant \size = 110;
+my @grid[size;size] = '16-input.txt'.IO.lines>>.comb;
+
+enum Direction <North East South West>;
+
+sub trace-config($x, $y, $dir) {
+    my @energized[size;size];
+    my %visited;
+    sub trace($x is copy, $y is copy, $dir is copy) {
+        loop {
+            @energized[$y;$x] = '#';
+            given @grid[$y;$x] {
+                when '\\' {
+                    given $dir {
+                        when North { $dir = West; }
+                        when South { $dir = East; }
+                        when East { $dir = South; }
+                        when West { $dir = North; }
+                    }
+                }
+                when '/' {
+                    given $dir {
+                        when North { $dir = East; }
+                        when South { $dir = West; }
+                        when East { $dir = North; }
+                        when West { $dir = South; }
+                    }
+                }
+                when '|' {
+                    given $dir {
+                        when East | West {
+                            trace($x, $y, North);
+                            trace($x, $y, South);
+                            return;
+                        }
+                    }
+                }
+                when '-' {
+                    given $dir {
+                        when North | South {
+                            trace($x, $y, East);
+                            trace($x, $y, West);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            given $dir {
+                when North { $y -= 1; return if $y < 0; }
+                when South { $y += 1; return if $y >= size; }
+                when East { $x += 1; return if $x >= size; }
+                when West { $x -= 1; return if $x < 0; }
+            }
+            return if %visited{"{$x},{$y},{$dir}"}:exists;
+            %visited{"{$x},{$y},{$dir}"} = True;
+        }
+    }
+
+    trace($x, $y, $dir);
+    +@energized.grep(-> $c { $c.defined && $c eq '#' })
+}
+
+my @totals = (^size).map(-> $x { trace-config($x, 0, South); });
+@totals.append: (^size).map(-> $x { trace-config($x, size - 1, North); });
+@totals.append: (^size).map(-> $y { trace-config(0, $y, East); });
+@totals.append: (^size).map(-> $y { trace-config(size - 1, $y, West); });
+
+say "Total energized in best configuration {@totals.max}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Total energized in best configuration 7488
+: Took 28.78 seconds
