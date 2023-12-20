@@ -1,13 +1,12 @@
 ---
 title: "2023 AoC Day 14 – Parabolic Reflector Dish"
-date: 2023-12-19T22:30:00Z
+date: 2023-12-20T16:00:00Z
 tags:
   - raku
 categories:
   - code
   - advent
 comments: true
-draft: true
 ---
 
 This is a solution to Advent of Code 2023 day 14, written in Raku.
@@ -22,6 +21,15 @@ This is a solution to Advent of Code 2023 day 14, written in Raku.
 Tilt the platform so that the rounded rocks all roll north. Afterward, what is the total load on
 the north support beams?
 #+end_quote
+
+Strategy:
+
+ + Read the input data into a 2 dimensional array
+ + Walk the array, moving ~O~ chars up into empty space
+ + Keep iterating until nothing moves
+
+There are lots of opportunities to optimize this if necessary, but this brute-force method
+should be good enough.
 
 #+begin_src raku :results output
 my @grid[100;100] = '14-input.txt'.IO.lines>>.comb;
@@ -72,6 +80,17 @@ rounded rocks in those four directions in that order...
 Run the spin cycle for 1000000000 cycles. Afterward, what is the total load on the north support
 beams?
 #+end_quote
+
+One billion cycles is a hint that we shouldn't even try to run to completion and that the cycle
+state will start repeating itself.
+
+Strategy:
+ + Run each cycle of moving ~O~ chars to the North, West, South and East
+ + Add the resulting weight to a map and a list for later lookup
+ + Detect when there is a repeating cycle state and extrapolate the result
+
+Resuing the approach from part 1 but if it completes in a few minutes, then that's still good
+enough.
 
 #+begin_src raku :results output :tangle "aoc-14.raku" :shebang "#!/usr/bin/env raku"
 constant \size = 100;
@@ -145,7 +164,7 @@ for ^500 -> $cycle {
                                 (size - y) if @grid[y; x] eq 'O'
                             })
                     });
-    print '.';
+    # print '.';
 
     if %totals-to-cycle{$total}:exists {
         my $prev-cycle = %totals-to-cycle{$total};
@@ -170,7 +189,5 @@ say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
 #+end_src
 
 #+RESULTS:
-: ...............
-: Total load is 64
-: Took 0.11 seconds
-
+: Total load is 99118
+: Took 159.43 seconds
