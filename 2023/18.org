@@ -1,0 +1,122 @@
+---
+title: "2023 AoC Day 18 – Lavaduct Lagoon"
+date: 2023-12-21T22:00:00Z
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 18, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/18]]
+
+** Part One
+
+#+begin_quote
+The digger starts in a 1 meter cube hole in the ground. They then dig the specified number of
+meters up (U), down (D), left (L), or right (R), clearing full 1 meter cubes as they go. The
+directions are given as seen from above, so if "up" were north, then "right" would be east, and
+so on. Each trench is also listed with the color that the edge of the trench should be painted
+as an RGB hexadecimal color code ...
+
+The Elves are concerned the lagoon won't be large enough; if they follow their dig plan, how
+many cubic meters of lava could it hold?
+#+end_quote
+
+#+begin_src raku :results output :tangle "aoc-18.raku" :shebang "#!/usr/bin/env raku"
+my @plan = '18-input.txt'.IO.lines.map(
+    ,*.match(/^(\w) ' ' (\d+) /).list>>.Str
+);
+
+my @coords;
+my @cur-pos = 0, 0;
+@coords.push(@cur-pos);
+my $trench = 0;
+
+for @plan -> @line {
+    my $dir = @line[0];
+    my $distance = @line[1].Int;
+    $trench += $distance;
+    my @new-pos = @cur-pos;
+
+    given $dir {
+        when 'L' { @new-pos[0] -= $distance; }
+        when 'R' { @new-pos[0] += $distance; }
+        when 'U' { @new-pos[1] -= $distance; }
+        when 'D' { @new-pos[1] += $distance; }
+    }
+    @coords.push(@new-pos);
+    @cur-pos = @new-pos;
+}
+
+my $total = 0;
+for ^ (+@coords - 1) -> $i {
+    $total += @coords[$i][0] * @coords[$i + 1][1];
+    $total -= @coords[$i + 1][0] * @coords[$i][1];
+}
+
+my $area = (abs($total) + $trench) / 2 + 1;
+say "Total {$area}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Total 46334
+: Took 0.07 seconds
+
+** Part Two
+
+#+begin_quote
+Each hexadecimal code is six hexadecimal digits long. The first five hexadecimal digits encode
+the distance in meters as a five-digit hexadecimal number. The last hexadecimal digit encodes
+the direction to dig: 0 means R, 1 means D, 2 means L, and 3 means U ...
+
+Convert the hexadecimal color codes into the correct instructions; if the Elves follow this new
+dig plan, how many cubic meters of lava could the lagoon hold?
+#+end_quote
+
+#+begin_src raku :results output :tangle "aoc-18.raku" :shebang "#!/usr/bin/env raku"
+my @plan = '18-input.txt'.IO.lines.map(
+    ,*.match(/ '(#' (.....) (.) ')' /).list>>.Str
+);
+
+my @coords;
+my @cur-pos = 0, 0;
+@coords.push(@cur-pos);
+my $trench = 0;
+
+for @plan -> @line {
+    my $dir = @line[1].trans('0123' => 'RDLU');
+    my $distance = @line[0].parse-base(16);
+    $trench += $distance;
+    my @new-pos = @cur-pos;
+
+    given $dir {
+        when 'L' { @new-pos[0] -= $distance; }
+        when 'R' { @new-pos[0] += $distance; }
+        when 'U' { @new-pos[1] -= $distance; }
+        when 'D' { @new-pos[1] += $distance; }
+    }
+    @coords.push(@new-pos);
+    @cur-pos = @new-pos;
+}
+
+my $total = 0;
+for ^ (+@coords - 1) -> $i {
+    $total += @coords[$i][0] * @coords[$i + 1][1];
+    $total -= @coords[$i + 1][0] * @coords[$i][1];
+}
+
+my $area = (abs($total) + $trench) / 2 + 1;
+say "Total {$area}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: Total 102000662718092
+: Took 0.08 seconds
