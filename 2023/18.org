@@ -28,6 +28,12 @@ The Elves are concerned the lagoon won't be large enough; if they follow their d
 many cubic meters of lava could it hold?
 #+end_quote
 
+Strategy:
+
+ + Build a list of the vertices for the trench polygon
+ + Calculate the area inside the polygon
+ + Add half the trench area (which is outside the polygon)
+
 #+begin_src raku :results output :tangle "aoc-18.raku" :shebang "#!/usr/bin/env raku"
 my @plan = '18-input.txt'.IO.lines.map(
     ,*.match(/^(\w) ' ' (\d+) /).list>>.Str
@@ -79,6 +85,9 @@ the direction to dig: 0 means R, 1 means D, 2 means L, and 3 means U ...
 Convert the hexadecimal color codes into the correct instructions; if the Elves follow this new
 dig plan, how many cubic meters of lava could the lagoon hold?
 #+end_quote
+
+Part 2 uses a copy of the solution from part 1 with a modified regex and the data converted to
+the same format as part 1.
 
 #+begin_src raku :results output :tangle "aoc-18.raku" :shebang "#!/usr/bin/env raku"
 my @plan = '18-input.txt'.IO.lines.map(
