@@ -1,0 +1,193 @@
+---
+title: "2023 AoC Day 19 – Aplenty"
+date: 2023-12-22T16:00:00Z
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 19, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/19]]
+
+** Part One
+
+#+begin_quote
+Sort through all of the parts you've been given; what do you get if you add together all of the
+rating numbers for all of the parts that ultimately get accepted?
+#+end_quote
+
+#+begin_src raku :results output
+class Rule { has $.category; has $.cond; has $.val; has $.action; }
+class Workflow { has $.name; has @.rules; }
+
+my $input = slurp '19-input.txt';
+my ($workflows, $parts) = $input.split("\n\n")>>.lines;
+
+my %workflows = @$workflows.map(
+    -> $w {
+        my $m = $w.match(
+            /^ $<name>=(\w+) '{'
+               $<rules>=( [$<cat>=(\w) $<cond>=(<[<>]>) $<val>=(\d+) ':' $<action>=(\w+)]
+                           | $<action>=(\w+) )+ % ','
+               '}' $/);
+        my @rules = $m<rules>.map(
+            -> $r {
+                if $r<cat> {
+                    my $category = $r<cat>.Str;
+                    my $cond = $r<cond>.Str;
+                    my $val = $r<val>.Int;
+                    my $action = $r<action>.Str;
+                    Rule.new(:$category, :$cond, :$val, :$action)
+                } else {
+                    my $action = $r<action>.Str;
+                    Rule.new(:$action)
+                }
+            });
+        my $name = $m<name>.Str;
+        $name => Workflow.new(:$name, :@rules);
+    });
+
+my $total = 0;
+
+part:
+for @$parts -> $p {
+    my ($x, $m, $a, $s) = $p.comb(/\d+/);
+    my %vals = x => $x, m => $m, a => $a, s => $s;
+
+    my $w = %workflows<in>;
+    my $i = $w.rules.iterator;
+    while $i {
+        my $r = $i.pull-one;
+        if $r.cond {
+            if $r.cond eq '<' {
+                next if not %vals{$r.category} < $r.val;
+            } else {
+                next if not %vals{$r.category} > $r.val;
+            }
+        }
+
+        next part if $r.action eq 'R';
+        if $r.action eq 'A' {
+            $total += $x + $m + $a + $s;
+            next part;
+        }
+        if %workflows{$r.action}:exists {
+            $w = %workflows{$r.action};
+            $i = $w.rules.iterator;
+        }
+    }
+}
+
+say $total;
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: 397134
+: Took 0.10 seconds
+
+
+** Part Two
+
+#+begin_quote
+Each of the four ratings (x, m, a, s) can have an integer value ranging from a minimum of 1 to a
+maximum of 4000. Of all possible distinct combinations of ratings, your job is to figure out
+which ones will be accepted ...
+
+Consider only your list of workflows; the list of part ratings that the Elves wanted you to sort
+is no longer relevant. How many distinct combinations of ratings will be accepted by the Elves'
+workflows?
+#+end_quote
+
+Strategy:
+
+ + Reuse the rule parsing from part 1 and ignore the parts
+ + Apply the workflow rules to a set of ~1..4000~ input ranges
+ + Recursively sub-divide the ranges through the rule processing
+ + Retain the sub-ranges that reach an ~A~ accept rule
+
+#+begin_src raku :results output
+class Rule { has $.cat; has $.cond; has $.val; has $.action; }
+class Workflow { has $.name; has @.rules; }
+
+my $input = slurp '19-input.txt';
+my ($workflows, $parts) = $input.split("\n\n")>>.lines;
+
+my %workflows = @$workflows.map(
+    -> $w {
+        my $m = $w.match(
+            /^ $<name>=(\w+) '{'
+               $<rules>=( [$<cat>=(\w) $<cond>=(<[<>]>) $<val>=(\d+) ':' $<action>=(\w+)]
+                           | $<action>=(\w+) )+ % ','
+               '}' $/);
+        my @rules = $m<rules>.map(
+            -> $r {
+                if $r<cat> {
+                    my $cat = $r<cat>.Str;
+                    my $cond = $r<cond>.Str;
+                    my $val = $r<val>.Int;
+                    my $action = $r<action>.Str;
+                    Rule.new(:$cat, :$cond, :$val, :$action)
+                } else {
+                    my $action = $r<action>.Str;
+                    Rule.new(:$action)
+                }
+            });
+        my $name = $m<name>.Str;
+        $name => Workflow.new(:$name, :@rules);
+    });
+
+my @ranges;
+sub evaluate-range(%r, $name) {
+    return if $name eq 'R';
+
+    if $name eq 'A' {
+        @ranges.push(%r);
+        return;
+    }
+
+    my $w = %workflows{$name};
+    for $w.rules -> $rule {
+        if ! $rule.cond {
+            evaluate-range(%r, $rule.action);
+        } elsif $rule.cond eq '<' {
+            my %sub-r = %r;
+            my $new-max = %r{$rule.cat}.max min ($rule.val - 1);
+            %sub-r{$rule.cat} = %r{$rule.cat}.min .. $new-max;
+
+            evaluate-range(%sub-r, $rule.action);
+
+            my $new-min = %r{$rule.cat}.min max ($rule.val);
+            %r{$rule.cat} = $new-min .. %r{$rule.cat}.max;
+        } elsif $rule.cond eq '>' {
+            my %sub-r = %r;
+            my $new-min = %r{$rule.cat}.min max ($rule.val + 1);
+            %sub-r{$rule.cat} = $new-min .. %r{$rule.cat}.max;
+
+            evaluate-range(%sub-r, $rule.action);
+
+            my $new-max = %r{$rule.cat}.max min ($rule.val);
+            %r{$rule.cat} = %r{$rule.cat}.min .. $new-max;
+        }
+    }
+}
+
+my %r = x => 1..4000, m => 1..4000, a => 1..4000, s => 1..4000;
+evaluate-range(%r, 'in');
+
+say [+] @ranges.map(
+    -> %r {
+        [*] %r.values.map(-> $val { $val.max - $val.min + 1})
+    });
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: 127517902575337
+: Took 0.10 seconds
