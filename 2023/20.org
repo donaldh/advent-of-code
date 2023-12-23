@@ -1,0 +1,150 @@
+---
+title: "2023 AoC Day 20 – Pulse Propagation"
+date: 2023-12-20
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 20, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/20]]
+
+** Part One
+
+#+begin_quote
+Consult your module configuration; determine the number of low pulses and high pulses that would
+be sent after pushing the button 1000 times, waiting for all pulses to be fully handled after
+each push of the button. What do you get if you multiply the total number of low pulses sent by
+the total number of high pulses sent?
+#+end_quote
+
+#+begin_src raku :results output :tangle "aoc-20.org" :shebang "#!/usr/bin/env raku"
+enum State <Low High>;
+
+class Tx {
+    has $.name;
+    has @.dests;
+    method send(State $s, $from, @q) {
+        for @!dests -> $d {
+            # say "{$!name} -{$s}-> {$d}";
+            @q.push($d => ($!name, $s));
+        }
+    }
+    method gist { "  Tx {$!name} -> {@!dests}" }
+}
+
+class FlipFlop is Tx {
+    has $.state is rw = Low;
+    method send(State $s, $from, @q) {
+        return if $s == High;
+        $!state = $!state == Low ?? High !! Low;
+        nextwith($!state, $from, @q);
+    }
+    method gist { "Flip {self.name} -> {self.dests}" }
+}
+
+class Con is Tx {
+    has %.inputs;
+    method send(State $s, $from, @q) {
+        %!inputs{$from} = $s;
+        say %!inputs if self.name eq 'qt' and $s == High;
+        my $inv = all(%!inputs.values) == High ?? Low !! High;
+        nextwith($inv, $from, @q);
+    }
+    method gist { " Con {self.name} -> {self.dests} [{%!inputs.keys}]" }
+}
+
+my %modules = '20-input.txt'.IO.lines.map(
+    -> $line {
+        my $m = $line.match(
+            / $<kind>=(<[%&]>)? $<name>=(\w+) ' -> ' $<dests>=(\w+)+ % ', ' $/);
+        my $name = $<name>.Str;
+        my @dests = $m<dests>>>.Str;
+
+        $name => do given ($m<kind> // '').Str {
+            when '%' { FlipFlop.new(:$name, :@dests) }
+            when '&' { Con.new(:$name, :@dests) }
+            default { Tx.new(:$name, :@dests) }
+        }
+    });
+
+for %modules.values -> $m {
+    for $m.dests -> $d {
+        if %modules{$d}:exists {
+            my $dm = %modules{$d};
+            if $dm.isa(Con) {
+                $dm.inputs{$m.name} = Low;
+            }
+        }
+    }
+}
+
+#.say for %modules.values;
+
+my $total-low = 0;
+my $total-high = 0;
+my $rx-seen = False;
+
+sub press(@q is copy) {
+    while @q {
+        my @next;
+        for @q -> $message {
+            if $message.value[1] == Low {
+                $total-low += 1;
+                $rx-seen = True if $message.key eq 'rx';
+            } else {
+                $total-high += 1;
+            }
+
+            next if %modules{$message.key}:!exists;
+            my $m = %modules{$message.key};
+
+            $m.send($message.value[1], $message.value[0], @next);
+        }
+        @q = @next;
+    }
+}
+
+my @q = 'broadcaster' => ('button', Low);
+press(@q) for ^10000;
+say "Part 1 - {$total-low} * {$total-high} = {$total-low * $total-high}";
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+
+# for 1..Inf -> $n {
+#     print '.' if $n %% 10_000;
+#     press(@q);
+#     if $rx-seen {
+#         say "Part 2 - {$n} button presses";
+#         last;
+#     }
+# }
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{bb => Low, gl => Low, kk => Low, mr => High}
+{bb => Low, gl => Low, kk => High, mr => Low}
+{bb => High, gl => Low, kk => Low, mr => Low}
+{bb => Low, gl => High, kk => Low, mr => Low}
+{bb => Low, gl => Low, kk => Low, mr => High}
+{bb => Low, gl => Low, kk => High, mr => Low}
+{bb => High, gl => Low, kk => Low, mr => Low}
+{bb => Low, gl => High, kk => Low, mr => Low}
+Part 1 - 188345 * 469953 = 88513297785
+Took 4.12 seconds
+#+end_example
+
+
+** Part Two
+
+#+begin_quote
+
+#+end_quote
+
