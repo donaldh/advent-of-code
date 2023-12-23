@@ -1,6 +1,6 @@
 ---
 title: "2023 AoC Day 16 – The Floor Will Be Lava"
-date: 2023-12-16
+date: 2023-12-20T22:30:00Z
 tags:
   - raku
 categories:
