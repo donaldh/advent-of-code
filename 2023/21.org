@@ -1,0 +1,94 @@
+---
+title: "2023 AoC Day 21 – Step Counter"
+date: 2023-12-21
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 21, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/21]]
+
+** Part One
+
+#+begin_quote
+Starting from the garden plot marked S on your map, how many garden plots could the Elf reach in
+exactly 64 steps?
+#+end_quote
+
+#+begin_src raku :results output
+constant \size = 131;
+my @grid[size;size] = '21-input.txt'.IO.lines>>.comb;
+my ($start-pos, $) = @grid.kv.grep(-> $k, $v { $v eq 'S' })[0];
+
+my @deltas = (0-1i), (0+1i), (-1+0i), (1+0i);
+
+my $coords = SetHash.new;
+$coords.set($start-pos[0] + $start-pos[1]i);
+
+for ^64 {
+    my $new-coords = SetHash.new;
+    for $coords.keys -> $c {
+        for @deltas -> $d {
+            my $dc = $c + $d;
+            if @grid[$dc.im % size; $dc.re % size] ne '#' {
+                $new-coords.set($dc);
+            }
+        }
+    }
+    $coords = $new-coords;
+}
+
+say +$coords.keys;
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
+
+#+RESULTS:
+: 3768
+: Took 1.06 seconds
+
+
+** Part Two
+
+#+begin_quote
+However, the step count the Elf needs is much larger! Starting from the garden plot marked S on
+your infinite map, how many garden plots could the Elf reach in exactly 26501365 steps?
+#+end_quote
+
+
+#+begin_src raku :results output
+constant \size = 11;
+my @grid[size;size] = '21-test.txt'.IO.lines>>.comb;
+my ($start-pos, $) = @grid.kv.grep(-> $k, $v { $v eq 'S' })[0];
+
+my @deltas = (0-1i), (0+1i), (-1+0i), (1+0i);
+
+my $coords = SetHash.new;
+$coords.set($start-pos[0] + $start-pos[1]i);
+
+for ^500 {
+    my $new-coords = SetHash.new;
+    for $coords.keys -> $c {
+        for @deltas -> $d {
+            my $dc = $c + $d;
+            if @grid[$dc.im % size; $dc.re % size] ne '#' {
+                $new-coords.set($dc);
+            }
+        }
+    }
+    $coords = $new-coords;
+}
+
+say +$coords.keys;
+# say $coords.keys.map(*.re).min;
+# say $coords.keys.map(*.re).max;
+# say $coords.keys.map(*.im).min;
+# say $coords.keys.map(*.im).max;
+say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+#+end_src
