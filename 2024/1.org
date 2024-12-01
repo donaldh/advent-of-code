@@ -1,0 +1,62 @@
+---
+title: "2024 AoC Day 1 – Historian Hysteria"
+date: 2024-12-01
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 1, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/1]]
+
+** Part One
+
+#+begin_quote
+To find the total distance between the left list and the right list, add up the distances
+between all of the pairs you found. In the example above, this is 2 + 1 + 0 + 1 + 2 + 5, a total
+distance of 11!
+
+Your actual left and right lists contain many location IDs. What is the total distance between
+your lists?
+#+end_quote
+
+#+begin_src raku :results output
+my @pairs = 'input-1.txt'.IO.lines>>.split(/\s+/)>>.Int;
+
+my @a = @pairs.map(-> ($a, $b) { $a }).sort;
+my @b = @pairs.map(-> ($a, $b) { $b }).sort;
+
+say [+] (@a Z @b).map(-> ($a, $b) { abs($a - $b) });
+#+end_src
+
+#+RESULTS:
+: 1580061
+
+
+** Part Two
+
+#+begin_quote
+This time, you'll need to figure out exactly how often each number from the left list appears in
+the right list. Calculate a total similarity score by adding up each number in the left list
+after multiplying it by the number of times that number appears in the right list.
+
+Once again consider your left and right lists. What is their similarity score?
+#+end_quote
+
+#+begin_src raku :results output
+my @pairs = 'input-1.txt'.IO.lines>>.split(/\s+/)>>.Int;
+
+my @a = @pairs.map(-> ($a, $b) { $a });
+my $b = @pairs.map(-> ($a, $b) { $b }).Bag;
+
+say [+] @a.map(-> $n { $n * $b{$n} // 0 });
+#+end_src
+
+#+RESULTS:
+: 23046913
