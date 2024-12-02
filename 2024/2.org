@@ -1,0 +1,70 @@
+---
+title: "2024 AoC Day 2 – Red-Nosed Reports"
+date: 2024-12-02
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 2, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/2]]
+
+** Part One
+
+#+begin_quote
+Analyze the unusual data from the engineers. How many reports are safe?
+#+end_quote
+
+#+begin_src raku :results output
+my @lines = 'input-2.txt'.IO.lines>>.split(/\s+/);
+
+say [+] @lines.map(
+    -> @levels {
+        ([<] @levels or [>] @levels) and        # in increasing/decreasing order
+        [&&] (@levels <<-<< @levels[1..*]).map( # difference between successive pairs
+            -> $n { 1 <= abs($n) <= 3 }         # $n is in the valid range
+        )
+    });
+#+end_src
+
+#+RESULTS:
+: 213
+
+
+** Part Two
+
+#+begin_quote
+Update your analysis by handling situations where the Problem Dampener can remove a single level
+from unsafe reports. How many reports are now safe?
+#+end_quote
+
+#+begin_src raku :results output
+my @lines = 'input-2.txt'.IO.lines>>.split(/\s+/);
+
+sub is-safe(@levels) {
+    ([<] @levels or [>] @levels) and
+    [&&] (@levels <<-<< @levels[1..*]).map(
+        -> $n { 1 <= abs($n) <= 3 }
+    )
+}
+
+say [+] @lines.map(
+    -> @levels {
+        is-safe(@levels) or   # is original list safe
+        [||] (^+@levels).map( # is any sub-list safe
+            -> $pos {
+                # sub-list omitting $pos
+                is-safe(@levels[0..^$pos, $pos+1..*].flat)
+            }
+        )
+    });
+#+end_src
+
+#+RESULTS:
+: 285
