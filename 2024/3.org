@@ -1,0 +1,72 @@
+---
+title: "2024 AoC Day 3 – Mull It Over"
+date: 2024-12-03
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 3, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/3]]
+
+** Part One
+
+#+begin_quote
+Scan the corrupted memory for uncorrupted mul instructions. What do you get if you add up all of
+the results of the multiplications?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+my $test = 'xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))';
+my $input = slurp 'input-3.txt';
+
+sub sum-of-products($input) {
+    [+] $input.match(/'mul(' (\d+) ',' (\d+) ')'/,
+                     :g)>>.map(+*).map(-> ($a, $b) { $a * $b });
+}
+
+is sum-of-products($test), 161, "example input";
+say sum-of-products($input);
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 183669043
+
+
+** Part Two
+
+#+begin_quote
+
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+my $test = Q«xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))»;
+my $input = slurp 'input-3.txt';
+
+sub sum-of-products($input) {
+    my $matching = True;
+    [+] $input.match(/ [ [ 'mul(' (\d+) ',' (\d+) ')' <?{ $matching }> ]
+                         | [ 'do()' <{ $matching = True }> ]
+                         | [ 'don\'t()' <{ $matching = False }> ]
+                       ]/,
+                     :g)>>.map(+*).map(-> ($a, $b) { $a * $b });
+}
+
+is sum-of-products($test), 48, "example input";
+say sum-of-products($input);
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 59097164
