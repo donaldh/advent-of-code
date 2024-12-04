@@ -26,6 +26,11 @@ Your actual left and right lists contain many location IDs. What is the total di
 your lists?
 #+end_quote
 
+*** Raku
+
+Half of the challenge is taking the input which has two values per line and pivoting it to group
+by column instead. Then it is sorted before a zip merge and reduction to a sum of differences.
+
 #+begin_src raku :results output
 my @pairs = 'input-1.txt'.IO.lines>>.split(/\s+/)>>.Int;
 
@@ -82,6 +87,11 @@ after multiplying it by the number of times that number appears in the right lis
 Once again consider your left and right lists. What is their similarity score?
 #+end_quote
 
+*** Raku
+
+Roughly the same first step, grouping the data by column, but then converting the second column
+to a ~Bag~ so we can efficiently look up the occurences for each item in the first column.
+
 #+begin_src raku :results output
 my @pairs = 'input-1.txt'.IO.lines>>.split(/\s+/)>>.Int;
 
@@ -89,6 +99,50 @@ my @a = @pairs.map(-> ($a, $b) { $a });
 my $b = @pairs.map(-> ($a, $b) { $b }).Bag;
 
 say [+] @a.map(-> $n { $n * $b{$n} // 0 });
+#+end_src
+
+#+RESULTS:
+: 23046913
+
+*** Rust
+
+There isn't a bag data structure in the Rust ~std~ crate and I'm not going to reach for other
+crates so I need to roll my own. It's surprisingly easy to fill a map with counted occurrences.
+Again I don't know if this is idiomatic.
+
+#+begin_src rust
+use std::error::Error;
+use std::fs;
+use std::collections::BTreeMap;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("/Users/donaldh/git/advent-of-code/2024/input-1.txt")?;
+    let pairs: Vec<Vec<i32>> = input.lines()
+        .map(|x| x.split("   ").map(|x| x.parse::<i32>().unwrap()).collect())
+        .collect();
+
+    let left: Vec<i32> = pairs.iter().map(|x| x[0]).collect();
+    let right: Vec<i32> = pairs.iter().map(|x| x[1]).collect();
+
+    let mut right_bag = BTreeMap::new();
+    for value in right.iter() {
+        if let Some(n) = right_bag.get_mut(value) {
+            ,*n += 1;
+        } else {
+            right_bag.insert(value, 1);
+        }
+    }
+
+    let mut total: i32 = 0;
+    for value in left.iter() {
+        if let Some(n) = right_bag.get(value) {
+            total += value * n;
+        }
+    }
+    println!("{:#?}", total);
+
+    Ok(())
+}
 #+end_src
 
 #+RESULTS:
