@@ -1,0 +1,130 @@
+---
+title: "2024 AoC Day 4 – Ceres Search"
+date: 2024-12-04
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 4, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/4]]
+
+** Part One
+
+#+begin_quote
+This word search allows words to be horizontal, vertical, diagonal, written backwards, or even
+overlapping other words. It's a little unusual, though, as you don't merely need to find one
+instance of XMAS - you need to find all of them...
+
+Take a look at the little Elf's word search. How many times does XMAS appear?
+#+end_quote
+
+Okay, brute-force search for the win! Traverse every position of the grid ~@p~ and try walking
+through the characters of ~XMAS~ in each direction. Silently terminate any walk that gets array
+bounds errors.
+
+#+begin_src raku :results output
+use Test;
+
+sub search($input, $size) {
+    my @p[$size;$size] = $input.lines>>.comb;
+
+    sub xmas-walk($x is copy, $y is copy, $c is copy, $dir) {
+        return False unless @p[$x;$y] eq $c;
+        return True if $c eq 'S';
+
+        $x -= 1 if $dir.starts-with('n');
+        $x += 1 if $dir.starts-with('s');
+        $y -= 1 if $dir.ends-with('w');
+        $y += 1 if $dir.ends-with('e');
+
+        $c .= trans('XMA' => 'MAS');
+
+        (try xmas-walk($x, $y, $c, $dir)) // False  # absorb array bounds failures
+    }
+
+    my $total = 0;
+    for ^$size -> $x {
+        for ^$size -> $y {
+            for <n ne e se s sw w nw> -> $dir {
+                $total += xmas-walk($x, $y, 'X', $dir);
+            }
+        }
+    }
+
+    $total;
+}
+
+my $test = slurp 'test-4.txt';
+is search($test, 10), 18, 'example input';
+
+my $input = slurp 'input-4.txt';
+say search($input, 140);
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 2633
+
+
+** Part Two
+
+#+begin_quote
+Looking for the instructions, you flip over the word search to find that this isn't actually an
+XMAS puzzle; it's an X-MAS puzzle in which you're supposed to find two MAS in the shape of an
+X...
+
+Flip the word search from the instructions back over to the word search side and try again. How
+many times does an X-MAS appear?
+#+end_quote
+
+Part 2 also traverses the grid ~@p~, this time looking for the center character ~A~. Don't
+traverse the outer edges of ~@p~ as those positions couldn't be a match. When an ~A~ is found,
+check the four possible matrices of ~M~ and ~S~.
+
+#+begin_src raku :results output
+use Test;
+
+sub search($input, $size) {
+    my @p[$size;$size] = $input.lines>>.comb;
+
+    sub x-mas($x, $y) {
+        sub check($x, $y, $a, $b, $c, $d) {
+            @p[$x-1;$y-1] eq $a and @p[$x-1;$y+1] eq $b and
+            @p[$x+1;$y-1] eq $c and @p[$x+1;$y+1] eq $d
+        }
+
+        check($x, $y, 'M', 'M', 'S', 'S') or
+        check($x, $y, 'S', 'M', 'S', 'M') or
+        check($x, $y, 'S', 'S', 'M', 'M') or
+        check($x, $y, 'M', 'S', 'M', 'S')
+    }
+
+    my $total = 0;
+    for 1 .. $size - 2 -> $x {
+        for 1 .. $size - 2 -> $y {
+            if @p[$x;$y] eq 'A' {
+                $total += x-mas($x, $y);
+            }
+        }
+    }
+
+    $total;
+}
+
+my $test = slurp 'test-4.txt';
+is search($test, 10), 9, 'example input';
+
+my $input = slurp 'input-4.txt';
+say search($input, 140);
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 1936
