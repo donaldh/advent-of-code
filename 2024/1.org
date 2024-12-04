@@ -9,7 +9,7 @@ categories:
 comments: true
 ---
 
-This is a solution to Advent of Code 2024 day 1, written in Raku.
+This is a solution to Advent of Code 2024 day 1, written in Raku and in Rust.
 
 <!--more-->
 
@@ -38,6 +38,39 @@ say [+] (@a Z @b).map(-> ($a, $b) { abs($a - $b) });
 #+RESULTS:
 : 1580061
 
+*** Rust
+
+Here is part 1 implemented in Rust using the same approach as the Raku code, albeit with a lot
+more saying exactly what I mean. Not sure if this is idomatic Rust, or even half-sane Rust, but
+there we go. A big surprise for me is that ~sort()~ can't be used in a fluent style.
+
+#+begin_src rust
+use std::error::Error;
+use std::fs;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("/Users/donaldh/git/advent-of-code/2024/input-1.txt")?;
+    let pairs: Vec<Vec<i32>> = input.lines()
+        .map(|x| x.split("   ").map(|x| x.parse::<i32>().unwrap()).collect())
+        .collect();
+
+    let mut left: Vec<i32> = pairs.iter().map(|x| x[0]).collect();
+    left.sort();
+    let mut right: Vec<i32> = pairs.iter().map(|x| x[1]).collect();
+    right.sort();
+
+    let distances: Vec<i32> = left.iter().zip(right.iter())
+        .map(|(a, b)| { (a - b).abs() })
+        .collect();
+    let total: i32 = distances.iter().sum();
+    println!("{:#?}", total);
+
+    Ok(())
+}
+#+end_src
+
+#+RESULTS:
+: 1580061
 
 ** Part Two
 
