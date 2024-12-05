@@ -127,7 +127,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut right_bag = BTreeMap::new();
     for value in right.iter() {
         if let Some(n) = right_bag.get_mut(value) {
-            ,*n += 1;
+            *n += 1;
         } else {
             right_bag.insert(value, 1);
         }
