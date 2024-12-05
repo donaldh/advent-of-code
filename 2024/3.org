@@ -62,10 +62,10 @@ my $input = slurp 'input-3.txt';
 
 sub sum-of-products($input) {
     my $matching = True;
-    [+] $input.match(/ [ [ 'mul(' (\d+) ',' (\d+) ')' <?{ $matching }> ]
-                         | [ 'do()' <{ $matching = True }> ]
-                         | [ 'don\'t()' <{ $matching = False }> ]
-                       ]/,
+    [+] $input.match(/ [ 'mul(' (\d+) ',' (\d+) ')' <?{ $matching }> ]
+                     | [ 'do()' <{ $matching = True }> ]
+                     | [ 'don\'t()' <{ $matching = False }> ]
+                     /,
                      :g)>>.map(+*).map(-> ($a, $b) { $a * $b });
 }
 
