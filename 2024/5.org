@@ -34,8 +34,7 @@ sub check-queue($file) {
     for $pages-text.lines -> $line {
         my @pages = $line.split(',');
 
-        for 0 .. +@pages - 2 -> $i {
-            my ($l, $r) = @pages[$i,$i+1];
+        for @pages.rotor(2 => -1) -> ($l, $r) {
             next LINE if not $rules{"$l|$r"}:exists;
         }
 
@@ -77,8 +76,7 @@ sub check-queue($file) {
     for $pages-text.lines -> $line {
         my @pages = $line.split(',');
 
-        for 0 .. +@pages - 2 -> $i {
-            my ($l, $r) = @pages[$i,$i+1];
+        for @pages.rotor(2 => -1) -> ($l, $r) {
             if not $rules{"$l|$r"}:exists {
                 my @sorted = @pages.sort(
                     -> $a, $b {
