@@ -1,0 +1,107 @@
+---
+title: "2024 AoC Day 5 – Print Queue"
+date: 2024-12-05
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 5, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/5]]
+
+** Part One
+
+#+begin_quote
+Determine which updates are already in the correct order. What do you get if you add up the
+middle page number from those correctly-ordered updates?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub check-queue($file) {
+    my ($rule-text, $pages-text) = $file.IO.slurp.split("\n\n");
+    my $rules = $rule-text.lines.Set;
+    my @middle-numbers;
+
+    LINE:
+    for $pages-text.lines -> $line {
+        my @pages = $line.split(',');
+
+        for 0 .. +@pages - 2 -> $i {
+            my ($l, $r) = @pages[$i,$i+1];
+            next LINE if not $rules{"$l|$r"}:exists;
+        }
+
+        @middle-numbers.push: @pages[+@pages div 2];
+    }
+
+    [+] @middle-numbers
+}
+
+is check-queue('test-5.txt'), 143, 'example input';
+say check-queue('input-5.txt');
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 6498
+
+
+** Part Two
+
+#+begin_quote
+For each of the incorrectly-ordered updates, use the page ordering rules to put the page numbers
+in the right order...
+
+Find the updates which are not in the correct order. What do you get if you add up the middle
+page numbers after correctly ordering just those updates?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub check-queue($file) {
+    my ($rule-text, $pages-text) = $file.IO.slurp.split("\n\n");
+    my $rules = $rule-text.lines.Set;
+    my @middle-numbers;
+    my @sorted-middle-numbers;
+
+    LINE:
+    for $pages-text.lines -> $line {
+        my @pages = $line.split(',');
+
+        for 0 .. +@pages - 2 -> $i {
+            my ($l, $r) = @pages[$i,$i+1];
+            if not $rules{"$l|$r"}:exists {
+                my @sorted = @pages.sort(
+                    -> $a, $b {
+                        $rules{"$a|$b"}:exists ?? Order::Less !! Order::More;
+                    });
+                @sorted-middle-numbers.push: @sorted[+@sorted div 2];
+                next LINE;
+            }
+        }
+
+        @middle-numbers.push: @pages[+@pages div 2];
+    }
+
+    ([+] @middle-numbers), ([+] @sorted-middle-numbers)
+}
+
+is check-queue('test-5.txt'), (143, 123), 'example input';
+my ($part-one, $part-two) = check-queue('input-5.txt');
+say "Total of middle numbers from correct rules {$part-one}";
+say "Total of middle numbers from sorted rules {$part-two}";
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: Total of middle numbers from correct rules 6498
+: Total of middle numbers from sorted rules 5017
