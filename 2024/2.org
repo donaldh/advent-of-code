@@ -21,6 +21,10 @@ This is a solution to Advent of Code 2024 day 2, written in Raku.
 Analyze the unusual data from the engineers. How many reports are safe?
 #+end_quote
 
+The Raku ~[<]~ and ~[>]~ reduction meta-operators are very handy way to performa a boolean check
+for list order. With a few more boolean meta-operators and a hyper operator to compute a
+diference list we have a solution.
+
 #+begin_src raku :results output
 my @lines = 'input-2.txt'.IO.lines>>.split(/\s+/);
 
@@ -43,6 +47,9 @@ say [+] @lines.map(
 Update your analysis by handling situations where the Problem Dampener can remove a single level
 from unsafe reports. How many reports are now safe?
 #+end_quote
+
+Part two has a bit of refactoring to let us try successive sublists, along with another boolean
+meta-operator.
 
 #+begin_src raku :results output
 my @lines = 'input-2.txt'.IO.lines>>.split(/\s+/);
