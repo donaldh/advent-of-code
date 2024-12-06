@@ -1,0 +1,186 @@
+---
+title: "2024 AoC Day 6 – Guard Gallivant"
+date: 2024-12-06
+tags:
+  - raku
+  - draft
+categories:
+  - code
+  - advent
+comments: true
+draft: true
+---
+
+This is a solution to Advent of Code 2024 day 6, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/6]]
+
+** Part One
+
+#+begin_quote
+Predict the path of the guard. How many distinct positions will the guard visit before leaving
+the mapped area?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-six($input, $size) {
+    my @g[$size;$size] = $input.lines>>.comb;
+
+    sub find-start() {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                return ($x, $y) if @g[$y;$x] eq '^';
+            }
+        }
+    }
+
+    my ($x, $y) = find-start();
+    my $dir = '^';
+    my $seen = SetHash.new;
+
+    loop {
+        $seen.set("{$x},{$y}");
+        given $dir {
+            when '^' {
+                last if $y == 0;
+                $dir = '>' if @g[$y - 1;$x] eq '#';
+            }
+            when '>' {
+                last if $x == $size - 1;
+                $dir = 'v' if @g[$y;$x + 1] eq '#';
+            }
+            when 'v' {
+                last if $y == $size - 1;
+                $dir = '<' if @g[$y + 1;$x] eq '#';
+            }
+            when '<' {
+                last if $x == 0;
+                $dir = '^' if @g[$y;$x - 1] eq '#';
+            }
+        }
+
+        given $dir {
+            when '^' { $y -= 1; }
+            when '>' { $x += 1; }
+            when 'v' { $y += 1; }
+            when '<' { $x -= 1; }
+        }
+    }
+
+    +$seen.keys
+}
+
+is day-six('test-6.txt'.IO.slurp, 10), 41, 'example input';
+say day-six('input-6.txt'.IO.slurp, 130);
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 5305
+
+
+** Part Two
+
+#+begin_quote
+You need to get the guard stuck in a loop by adding a single new obstruction. How many different
+positions could you choose for this obstruction?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-six($input, $size) {
+    my @g[$size;$size] = $input.lines>>.comb;
+
+    sub find-start() {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                return ($x, $y) if @g[$y;$x] eq '^';
+            }
+        }
+    }
+
+    my ($x, $y) = find-start();
+    my $dir = '^';
+    my %seen;
+    my %turns;
+    my $obstacles = SetHash.new;
+
+    sub loop-check($x, $y, $dir) {
+        my $point = "$x,$y";
+        $obstacles.set($point) if %seen{$point} eq $dir;
+    }
+
+    sub draw() {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                if $obstacles{"$x,$y"}:exists {
+                    print 'O';
+                } else {
+                    print %seen{"$x,$y"} // @g[$y;$x];
+                }
+            }
+            say '';
+        }
+    }
+
+    loop {
+        %seen{"$x,$y"} = $dir;
+        given $dir {
+            when '^' {
+                last if $y == 0;
+                loop-check($x, $y - 1, '>');
+                $dir = '>' if @g[$y - 1;$x] eq '#';
+            }
+            when '>' {
+                last if $x == $size - 1;
+                loop-check($x + 1, $y, 'v');
+                $dir = 'v' if @g[$y;$x + 1] eq '#';
+            }
+            when 'v' {
+                last if $y == $size - 1;
+                loop-check($x, $y + 1, '<');
+                $dir = '<' if @g[$y + 1;$x] eq '#';
+            }
+            when '<' {
+                last if $x == 0;
+                loop-check($x - 1, $y, '^');
+                $dir = '^' if @g[$y;$x - 1] eq '#';
+            }
+        }
+
+        given $dir {
+            when '^' { $y -= 1; }
+            when '>' { $x += 1; }
+            when 'v' { $y += 1; }
+            when '<' { $x -= 1; }
+        }
+    }
+
+    draw;
+    +$obstacles.keys
+}
+
+is day-six('test-6.txt'.IO.slurp, 10), 6, 'example input';
+# say day-six('input-6.txt'.IO.slurp, 130);
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+....#.....
+....^>>>>#
+....^...v.
+..#.^...v.
+..^>>>>#v.
+..^.^.v.v.
+.#<<O<O<v.
+.^>>>>O>#.
+#<<<<<vv..
+......#v..
+not ok 1 - example input
+#+end_example
