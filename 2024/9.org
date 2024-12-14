@@ -1,0 +1,149 @@
+---
+title: "2023 AoC Day 9 – Disk Fragmenter"
+date: 2023-12-09
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2023 day 9, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2023/day/9]]
+
+** Part One
+
+#+begin_quote
+The amphipod would like to move file blocks one at a time from the end of the disk to the
+leftmost free space block (until there are no gaps remaining between file blocks).
+
+Compact the amphipod's hard drive using the process he requested. What is the resulting
+filesystem checksum?
+#+end_quote
+
+#+begin_src raku :results output :tangle "9.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-nine($file, :$debug = False) {
+    my @digits = $file.IO.slurp.chomp.comb;
+    my $id = 0;
+    my $is-file = True;
+
+    my @disk = @digits.map(
+        -> $d {
+            LEAVE $is-file =! $is-file;
+            if $is-file {
+                LEAVE $id += 1;
+                $id xx $d
+            } else {
+                '.' xx $d
+            }
+        }
+    ).flat;
+    say @disk.join if $debug;
+
+    for 0..* -> $i {
+        @disk.pop while @disk[*-1] eq '.';
+        last if $i >= +@disk;
+        if @disk[$i] eq '.' {
+            @disk[$i] = @disk.pop;
+        }
+    }
+
+    say @disk.join if $debug;
+    [+] @disk.kv.map(-> $k, $v { $k * $v });
+}
+
+say day-nine('test-9.txt', :debug);
+is day-nine('test-9.txt'), 1928, 'example input';
+say day-nine('input-9.txt');
+#+end_src
+
+#+RESULTS:
+: 00...111...2...333.44.5555.6666.777.888899
+: 0099811188827773336446555566
+: 1928
+: ok 1 - example input
+: 6415184586041
+
+
+** Part Two
+
+#+begin_quote
+The eager amphipod already has a new plan: rather than move individual blocks, he'd like to try
+compacting the files on his disk by moving whole files instead...
+
+Start over, now compacting the amphipod's hard drive using this new method instead. What is the
+resulting filesystem checksum?
+#+end_quote
+
+#+begin_src raku :results output :tangle "9b.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-nine($file, :$debug = False) {
+    my @digits = $file.IO.slurp.chomp.comb;
+    my $id = 0;
+    my $is-file = True;
+
+    my %file-spans;
+    my @free-spans;
+
+    my $pos = 0;
+    my @disk = @digits.map(
+        -> $d {
+            LEAVE $is-file =! $is-file;
+            LEAVE $pos += $d;
+            if $is-file {
+                LEAVE $id += 1;
+                %file-spans{$id} = $pos..^$pos+$d;
+                $id xx $d
+            } else {
+                @free-spans.push: $pos..^$pos+$d;
+                '.' xx $d
+            }
+        }
+    ).flat;
+    say @disk.join if $debug;
+
+    for $id ^... 0 -> $n {
+        for ^+@free-spans -> $i {
+            my $span = @free-spans[$i];
+            my $file = %file-spans{$n};
+            last if $file.min < $span.min;
+
+            if +$file <= +$span {
+                my $pos = $span.min;
+                $file.list.map(
+                    -> $f {
+                        @disk[$pos] = @disk[$f];
+                        @disk[$f] = '.';
+                        $pos += 1;
+                    });
+                @free-spans[$i] = $pos ..^ $span.max;
+                last;
+            }
+        }
+    }
+
+    say @disk.join if $debug;
+    [+] @disk.kv.map(-> $k, $v { $k * $v if $v ne '.' });
+}
+
+say day-nine('test-9.txt', :debug);
+is day-nine('test-9.txt'), 2858, 'example input';
+say day-nine('input-9.txt');
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: 00...111...2...333.44.5555.6666.777.888899
+: 00992111777.44.333....5555.6666.....8888..
+: 2858
+: ok 1 - example input
+: 6436819084274
+: Took 25.67s
+
