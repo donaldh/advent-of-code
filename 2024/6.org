@@ -3,12 +3,9 @@ title: "2024 AoC Day 6 – Guard Gallivant"
 date: 2024-12-06
 tags:
   - raku
-  - draft
 categories:
   - code
   - advent
-comments: true
-draft: true
 ---
 
 This is a solution to Advent of Code 2024 day 6, written in Raku.
@@ -90,7 +87,9 @@ You need to get the guard stuck in a loop by adding a single new obstruction. Ho
 positions could you choose for this obstruction?
 #+end_quote
 
-#+begin_src raku :results output
+TODO.
+
+#+begin_src raku :results output :exports none
 use Test;
 
 sub day-six($input, $size) {
@@ -170,17 +169,3 @@ is day-six('test-6.txt'.IO.slurp, 10), 6, 'example input';
 
 #+end_src
 
-#+RESULTS:
-#+begin_example
-....#.....
-....^>>>>#
-....^...v.
-..#.^...v.
-..^>>>>#v.
-..^.^.v.v.
-.#<<O<O<v.
-.^>>>>O>#.
-#<<<<<vv..
-......#v..
-not ok 1 - example input
-#+end_example
