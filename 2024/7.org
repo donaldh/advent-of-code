@@ -1,0 +1,117 @@
+---
+title: "2024 AoC Day 7 – Bridge Repair"
+date: 2024-12-07
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 7, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/7]]
+
+** Part One
+
+#+begin_quote
+The engineers just need the total calibration result, which is the sum of the test values from
+just the equations that could possibly be true...
+
+Determine which equations could possibly be true. What is their total calibration result?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub generate-candidates(@values) {
+    return @values if +@values == 1;
+
+    my $tail = @values[*-1];
+    my @rest = @values[0..^*-1];
+
+    my @totals = generate-candidates(@rest);
+    flat @totals.map(* + $tail), @totals.map(* * $tail)
+}
+
+sub day-seven($input) {
+    my @equations = $input.IO.lines.map(
+        -> $line {
+            my ($test, $values) = $line.split(': ');
+            my @values = $values.split(' ');
+            $test, @values
+        });
+
+    my @valid = @equations.grep(
+        -> ($test, @values) {
+            my @candidates = generate-candidates(@values);
+            [||] @candidates.map(-> $t { $test == $t} )
+        });
+
+    [+] @valid.map(-> ($test, @values) { $test });
+}
+
+is day-seven('test-7.txt'), 3749, 'example input';
+say day-seven('input-7.txt');
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 2437272016585
+: Took 0.91s
+
+
+** Part Two
+
+#+begin_quote
+The concatenation operator (||) combines the digits from its left and right inputs into a single
+number. For example, 12 || 345 would become 12345. All operators are still evaluated
+left-to-right...
+
+Using your new knowledge of elephant hiding spots, determine which equations could possibly be
+true. What is their total calibration result?
+#+end_quote
+
+#+begin_src raku :results output :tangle "7b.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub generate-candidates(@values) {
+    return @values if +@values == 1;
+
+    my $tail = @values[*-1];
+    my @rest = @values[0..^*-1];
+
+    my @totals = generate-candidates(@rest);
+    flat @totals.map(* + $tail), @totals.map(* * $tail), @totals.map(-> $n { +"$n$tail" })
+}
+
+sub day-seven($input) {
+    my @equations = $input.IO.lines.map(
+        -> $line {
+            my ($test, $values) = $line.split(': ');
+            my @values = $values.split(' ');
+            $test, @values
+        });
+
+    my @valid = @equations.grep(
+        -> ($test, @values) {
+            my @candidates = generate-candidates(@values);
+            [||] @candidates.map(-> $t { $test == $t} )
+        });
+
+    [+] @valid.map(-> ($test, @values) { $test });
+}
+
+is day-seven('test-7.txt'), 11387, 'example input';
+say day-seven('input-7.txt');
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 162987117690649
+: Took 46.60s
