@@ -1,0 +1,104 @@
+---
+title: "2024 AoC Day 11 – Plutonian Pebbles"
+date: 2024-12-11
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 11, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/11]]
+
+** Part One
+
+#+begin_quote
+Consider the arrangement of stones in front of you. How many stones will you have after blinking
+25 times?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+my $example = '125 17';
+my $input = '30 71441 3784 580926 2 8122942 0 291';
+
+sub day-eleven($input, $blinks = 25) {
+    my @stones = $input.split(' ');
+
+    for ^$blinks {
+        @stones .= map(
+            -> $s {
+                if $s eq 0 {
+                    1
+                } elsif +$s.comb %% 2 {
+                    my $mid = +$s.comb div 2;
+                    slip +$s.substr(0, $mid), +$s.substr($mid)
+                } else {
+                    +$s * 2024
+                }
+            });
+    }
+    +@stones;
+}
+
+is day-eleven($example), 55312, 'example input';
+say day-eleven($input);
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 191690
+: Took 1.60s
+
+
+** Part Two
+
+#+begin_quote
+How many stones would you have after blinking a total of 75 times?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+my $example = '125 17';
+my $input = '30 71441 3784 580926 2 8122942 0 291';
+
+sub day-eleven($input, $blinks = 25) {
+    my $stones = $input.split(' ').Bag;
+
+    for ^$blinks {
+        my $new-stones = BagHash.new;
+        $stones.kv.map(
+            -> $s, $count {
+                if $s eq 0 {
+                    $new-stones{1} += $count;
+                } elsif +$s.comb %% 2 {
+                    my $mid = +$s.comb div 2;
+                    $new-stones{+$s.substr(0, $mid)} += $count;
+                    $new-stones{+$s.substr($mid)} += $count;
+                } else {
+                    $new-stones{+$s * 2024} += $count;
+                }
+            });
+        $stones = $new-stones;
+    }
+    # say "After {$blinks} blinks there are {+$stones.keys} unique stones";
+    $stones.total
+}
+
+is day-eleven($example), 55312, 'example input';
+say day-eleven($input, 75);
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: 228651922369703
+: Took 1.28s

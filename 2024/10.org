@@ -1,0 +1,127 @@
+---
+title: "2024 AoC Day 10 – Hoof It"
+date: 2024-12-10
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2024 day 10, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2024/day/10]]
+
+** Part One
+
+#+begin_quote
+What is the sum of the scores of all trailheads on your topographic map?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-ten($file, $size) {
+    my @grid[$size;$size] = $file.IO.lines>>.comb;
+    my @moves = (0, 1), (1, 0), (0, -1), (-1, 0);
+
+    sub find-trail($x, $y, $height) {
+        for @moves -> ($dx, $dy) {
+            my $x2 = $x + $dx;
+            my $y2 = $y + $dy;
+            try if @grid[$y2;$x2] == $height {
+                if $height == 9 {
+                    take "$x2,$y2";
+                } else {
+                    find-trail($x2, $y2, $height + 1);
+                }
+            }
+        }
+    }
+
+    my @per-trailhead = gather {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                if @grid[$y;$x] == 0 {
+                    my @heads = gather find-trail($x, $y, 1);
+                    take +@heads.Set.keys;
+                }
+            }
+        }
+    }
+    [+] @per-trailhead
+}
+
+say day-ten('test-10.txt', 8);
+is day-ten('test-10.txt', 8), 36, 'example input';
+say day-ten('input-10.txt', 58);
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: 36
+: ok 1 - example input
+: 760
+: Took 0.48s
+
+
+** Part Two
+
+#+begin_quote
+What is the sum of the ratings of all trailheads?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-ten($file, $size, :$distinct-trails = False) {
+    my @grid[$size;$size] = $file.IO.lines>>.comb;
+    my @moves = (0, 1), (1, 0), (0, -1), (-1, 0);
+
+    sub find-trail($x, $y, $height) {
+        for @moves -> ($dx, $dy) {
+            my $x2 = $x + $dx;
+            my $y2 = $y + $dy;
+            try if @grid[$y2;$x2] == $height {
+                if $height == 9 {
+                    take "$x2,$y2";
+                } else {
+                    find-trail($x2, $y2, $height + 1);
+                }
+            }
+        }
+    }
+
+    my @per-trailhead = gather {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                if @grid[$y;$x] == 0 {
+                    my @heads = gather find-trail($x, $y, 1);
+                    if $distinct-trails {
+                        take +@heads;
+                    } else {
+                        take +@heads.Set.keys;
+                    }
+                }
+            }
+        }
+    }
+    [+] @per-trailhead
+}
+
+is day-ten('test-10.txt', 8), 36, 'part one';
+is day-ten('test-10.txt', 8, :distinct-trails), 81, 'part two';
+say 'Sum of trailhead scores: ', day-ten('input-10.txt', 58);
+say 'Sum of trailhead ratings: ', day-ten('input-10.txt', 58, :distinct-trails);
+say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
+#+end_src
+
+#+RESULTS:
+: ok 1 - part one
+: ok 2 - part two
+: Sum of trailhead scores: 760
+: Sum of trailhead ratings: 1764
+: Took 0.60s
