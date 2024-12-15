@@ -22,6 +22,9 @@ Consider the arrangement of stones in front of you. How many stones will you hav
 25 times?
 #+end_quote
 
+For part one I was a bit misled by "order is preserved" and the emphasis on arrangements, so I
+kept all the stones in a list and modified them while maintaining ordering.
+
 #+begin_src raku :results output
 use Test;
 
@@ -64,6 +67,12 @@ say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
 How many stones would you have after blinking a total of 75 times?
 #+end_quote
 
+I knew the solution to part one would blow up if part two asked for many more iterations. And
+right enough, there's no way it would work for 75 iterations. It's now clear that the ordering
+of stones is not relevant to the challenge so I can keep a map of the ~$count~ of each unique
+stone number. With each blink, the same transform will happen to all stones of the same
+number.
+
 #+begin_src raku :results output
 use Test;
 
@@ -89,7 +98,7 @@ sub day-eleven($input, $blinks = 25) {
             });
         $stones = $new-stones;
     }
-    # say "After {$blinks} blinks there are {+$stones.keys} unique stones";
+    # say "After {$blinks} blinks there are {+$stones.keys} unique stone numbers";
     $stones.total
 }
 
@@ -101,4 +110,4 @@ say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
 #+RESULTS:
 : ok 1 - example input
 : 228651922369703
-: Took 1.28s
+: Took 1.33s

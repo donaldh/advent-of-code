@@ -1,6 +1,6 @@
 ---
-title: "2023 AoC Day 9 – Disk Fragmenter"
-date: 2023-12-09
+title: "2024 AoC Day 9 – Disk Fragmenter"
+date: 2024-12-09
 tags:
   - raku
 categories:
@@ -35,7 +35,7 @@ sub day-nine($file, :$debug = False) {
 
     my @disk = @digits.map(
         -> $d {
-            LEAVE $is-file =! $is-file;
+            LEAVE $is-file = !$is-file;
             if $is-file {
                 LEAVE $id += 1;
                 $id xx $d
@@ -95,7 +95,7 @@ sub day-nine($file, :$debug = False) {
     my $pos = 0;
     my @disk = @digits.map(
         -> $d {
-            LEAVE $is-file =! $is-file;
+            LEAVE $is-file = !$is-file;
             LEAVE $pos += $d;
             if $is-file {
                 LEAVE $id += 1;

@@ -21,6 +21,13 @@ This is a solution to Advent of Code 2024 day 10, written in Raku.
 What is the sum of the scores of all trailheads on your topographic map?
 #+end_quote
 
+Using a recursive method, it seems easiest to walk all distinct trails from a trailhead and then
+save the destination coordinates so that they can be deduplicated.
+
+For each trailhead, the solution generates a list of destination coordinates for each distinct
+trail then converts it to a ~Set~ to deduplicate the result and find the number of unique
+destinations.
+
 #+begin_src raku :results output
 use Test;
 
@@ -55,17 +62,15 @@ sub day-ten($file, $size) {
     [+] @per-trailhead
 }
 
-say day-ten('test-10.txt', 8);
 is day-ten('test-10.txt', 8), 36, 'example input';
 say day-ten('input-10.txt', 58);
 say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
 #+end_src
 
 #+RESULTS:
-: 36
 : ok 1 - example input
 : 760
-: Took 0.48s
+: Took 0.33s
 
 
 ** Part Two
@@ -73,6 +78,10 @@ say "Took " ~ (now - ENTER now).base(10, 2) ~ "s";
 #+begin_quote
 What is the sum of the ratings of all trailheads?
 #+end_quote
+
+By some good fortune, part two wants all the distinct trails that I calculated in part one, just
+without deduplication. The solution to part to is a slight refactor of part one to parameterise
+whether it is distinct-trails we want.
 
 #+begin_src raku :results output
 use Test;
