@@ -1,0 +1,98 @@
+---
+title: "2025 AoC Day 1 – Secret Entrance"
+date: 2025-12-1
+tags:
+  - raku
+categories:
+  - code
+  - advent
+comments: true
+---
+
+This is a solution to Advent of Code 2025 day 1, written in Raku.
+
+<!--more-->
+
+[[https://adventofcode.com/2025/day/1]]
+
+** Part One
+
+#+begin_quote
+Analyze the rotations in your attached document. What's the actual password to
+open the door?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-one($input) {
+    my $total = 0;
+    my $dial = 50;
+
+    for $input.lines -> $l {
+        my $dir = $l.substr(0, 1);
+        my $count = $l.substr(1);
+        given $dir {
+            when 'L' {
+                $dial = ($dial - $count) % 100;
+            }
+            when 'R' {
+                $dial = ($dial + $count) % 100;
+            }
+        }
+        $total += 1 if $dial == 0;
+    }
+    $total
+}
+
+is day-one(slurp '1-test.txt'), 3, 'example input';
+say 'Part one: ', day-one(slurp '1-input.txt');
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: Part one: 1118
+
+
+** Part Two
+
+#+begin_quote
+Using password method 0x434C49434B, what is the password to open the door?
+#+end_quote
+
+#+begin_src raku :results output :tangle "day-one.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-one($input) {
+    my $total = 0;
+    my $dial = 50;
+
+    for $input.lines -> $l {
+        my $dir = $l.substr(0, 1);
+        my $count = $l.substr(1);
+        given $dir {
+            when 'L' {
+                $total += $count div 100;
+                my $new = $dial - ($count % 100);
+                $total += 1 if $dial > 0 and $new <= 0;
+                $dial = ($new + 100) % 100;
+            }
+            when 'R' {
+                $total += $count div 100;
+                my $new = $dial + ($count % 100);
+                $total += 1 if $dial < 100 and $new >= 100;
+                $dial = $new % 100;
+            }
+        }
+    }
+    $total
+}
+
+is day-one(slurp '1-test.txt'), 6, 'example input';
+say 'Part two: ', day-one(slurp '1-input.txt');
+
+#+end_src
+
+#+RESULTS:
+: ok 1 - example input
+: Part two: 6289
