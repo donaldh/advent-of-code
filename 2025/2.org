@@ -1,0 +1,125 @@
+#+title: 2025 AoC Day 2 – Gift Shop
+#+date: 2025-12-02
+#+tags[]: raku
+#+categories[]: code advent
+
+This is a solution to Advent of Code 2025 day 2, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/2]]
+
+** Part One
+
+#+begin_quote
+Since the young Elf was just doing silly patterns, you can find the invalid IDs by looking for
+any ID which is made only of some sequence of digits repeated twice. So, 55 (5 twice), 6464 (64
+twice), and 123123 (123 twice) would all be invalid IDs.
+
+... What do you get if you add up all of the invalid IDs?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-two($input) {
+    my @invalid;
+
+    for $input.split(',')>>.split('-') -> ($a, $b) {
+        for +$a..+$b -> $n {
+            my Str $s = ~$n;
+            if $s.chars %% 2 {
+                if [eq] $s.comb($s.chars div 2) {
+                    @invalid.push(+$s);
+                }
+            }
+        }
+    }
+
+    [+] @invalid;
+}
+
+is day-two(slurp '2-test.txt'), 1227775554, 'test input';
+say "Part one: ", day-two(slurp '2-input.txt');
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part one: 30599400849
+
+
+** Part Two
+
+#+begin_quote
+Now, an ID is invalid if it is made only of some sequence of digits repeated at least twice. So,
+12341234 (1234 two times), 123123123 (123 three times), 1212121212 (12 five times), and 1111111
+(1 seven times) are all invalid IDs.
+
+... What do you get if you add up all of the invalid IDs using these new rules?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-two($input) {
+    my @invalid;
+
+    for $input.split(',')>>.split('-') -> ($a, $b) {
+        ITEM:
+        for +$a..+$b -> $n {
+            my Str $s = ~$n;
+            for 2..$s.chars -> $n {
+                if $s.chars %% $n and [eq] $s.comb($s.chars div $n) {
+                    @invalid.push(+$s);
+                    next ITEM
+                }
+            }
+        }
+    }
+
+    [+] @invalid;
+}
+
+is day-two(slurp '2-test.txt'), 4174379265, 'test input';
+{
+    say "Part two: ", day-two(slurp '2-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 46270373595
+: Took 16.57 seconds
+
+*** Take Two
+
+#+begin_src raku :results output
+use Test;
+
+sub day-two($input) {
+    my @invalid = $input.split(',')>>.split('-')>>.map(
+        -> $a, $b { +$a..+$b }).flat.grep(
+        -> $i {
+            my Str $s = ~$i;
+            [or] (2..$s.chars).map(
+                -> $n {
+                    $s.chars %% $n and [eq] $s.comb($s.chars div $n)
+                }
+            )
+        });
+
+    [+] @invalid;
+}
+
+is day-two(slurp '2-test.txt'), 4174379265, 'test input';
+{
+    say "Part two: ", day-two(slurp '2-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 46270373595
+: Took 24.23 seconds
