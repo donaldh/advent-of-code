@@ -1,0 +1,126 @@
+#+title: 2025 AoC Day 3 – Lobby
+#+date: 2025-12-03
+#+tags[]: raku
+#+categories[]: code advent
+#+draft: true
+
+This is a solution to Advent of Code 2025 day 3, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/3]]
+
+** Part One
+
+#+begin_quote
+There are many batteries in front of you. Find the maximum joltage possible from each bank; what
+is the total output joltage?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-three($input) {
+    my @joltages = $input.lines>>.comb.map(
+        -> @line {
+            my @pairs = @line.pairs;
+            my $first= @pairs[0..^*-1].sort(-*.value)[0];
+            my $second = @pairs[$first.key^..*].sort(-*.value)[0];
+            +($first, $second)>>.value.join;
+        });
+    [+] @joltages
+}
+
+is day-three(slurp '3-test.txt'), 357, 'test input';
+{
+    say day-three(slurp '3-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: 17229
+: Took 0.09 seconds
+
+
+** Part Two
+
+#+begin_quote
+What is the new total output joltage?
+#+end_quote
+
+#+begin_src raku :results output :tangle "day3p2.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub max-n(@pairs, $pos, $n) {
+    return [] if $n == 0;
+
+    my $max = @pairs[$pos..*-$n].sort(-*.value)[0];
+    my @rest = max-n(@pairs, $max.key + 1, $n - 1);
+
+    return ($max, |@rest);
+}
+
+sub day-three($n, $input) {
+    my @joltages = $input.lines>>.comb.map(
+        -> @line {
+            my @pairs = @line.pairs;
+            my $s = max-n(@pairs, 0, $n).sort>>.value.join;
+            +$s;
+        });
+    [+] @joltages
+}
+
+is day-three(2, slurp '3-test.txt'), 357, 'part one test input';
+is day-three(12, slurp '3-test.txt'),  3121910778619, 'part two test input';
+{
+    say "Part one: ", day-three(2, slurp '3-input.txt');
+    say "Part two: ", day-three(12, slurp '3-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - part one test input
+: ok 2 - part two test input
+: Part one: 17229
+: Part two: 170520923035051
+: Took 0.22 seconds
+
+
+*** Take Two
+
+#+begin_src raku :results output :tangle "day3p2.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-three($n, $input) {
+    my @joltages = $input.lines>>.comb.map(
+        -> @line {
+            my @pairs = @line.pairs;
+            my $pos = 0;
+            ($n...1).map(
+                -> $n {
+                    my $cur = @pairs[$pos..*-$n].sort(-*.value)[0];
+                    $pos = $cur.key + 1;
+                    $cur
+                })>>.value.join;
+        });
+    [+] @joltages
+}
+
+is day-three(2, slurp '3-test.txt'), 357, 'part one test input';
+is day-three(12, slurp '3-test.txt'),  3121910778619, 'part two test input';
+{
+    say "Part one: ", day-three(2, slurp '3-input.txt');
+    say "Part two: ", day-three(12, slurp '3-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - part one test input
+: ok 2 - part two test input
+: Part one: 17229
+: Part two: 170520923035051
+: Took 0.27 seconds
