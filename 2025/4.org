@@ -1,0 +1,119 @@
+#+title: 2025 AoC Day 4 – Printing Department
+#+date: 2025-12-04
+#+tags[]: raku
+#+categories[]: code advent
+
+This is a solution to Advent of Code 2025 day 4, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/4]]
+
+** Part One
+
+#+begin_quote
+Consider your complete diagram of the paper roll locations. How many rolls of paper can be
+accessed by a forklift?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-four($input, $size) {
+    my @grid[$size;$size] = $input.lines>>.comb;
+
+    my @offsets = (-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1);
+    my @accessible = gather {
+        for ^$size -> $y {
+            for ^$size -> $x {
+                next if @grid[$y;$x] eq '.';
+                my @adjacent = @offsets.map(
+                    -> ($dy, $dx) {
+                        try @grid[$y + $dy; $x + $dx] eq '@'
+                    });
+                take ($x,$y) if +@adjacent.grep(*.so) < 4;
+            }
+        }
+    }
+
+    +@accessible;
+}
+
+is day-four(slurp('4-test.txt'), 10), 13, 'test input';
+{
+    say day-four(slurp('4-input.txt'), 140);
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: 1602
+: Took 1.12 seconds
+
+
+** Part Two
+
+#+begin_quote
+Start with your original diagram. How many rolls of paper in total can be removed by the Elves
+and their forklifts?
+#+end_quote
+
+#+begin_src raku :results output :tangle "day4p2.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-four($input) {
+
+    my @rolls = gather {
+        $input.IO.lines.kv.map(
+            -> $y, $line {
+                $line.comb.kv.map(
+                    -> $x, $c {
+                        take Complex.new($x, $y) if $c eq '@';
+                    }).sink
+            })
+    }
+
+    my @offsets = (-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1);
+    @offsets .= map(-> ($dy, $dx) { Complex.new($dx, $dy) });
+
+    my $total = 0;
+    my $rolls = @rolls.Set;
+
+    loop {
+        my @accessible = gather {
+            $rolls.keys.map(
+                -> $r {
+                    my $adjacent = 0;
+                    for @offsets -> $o {
+                        $adjacent += 1 if $rolls{$r + $o}:exists;
+                        last if $adjacent > 3;
+                    }
+                    take $r if $adjacent < 4;
+                });
+        }
+
+        last if +@accessible == 0;
+
+        $total += +@accessible;
+        $rolls = $rolls (-) @accessible.Set;
+    }
+
+    $total
+}
+
+is day-four('4-test.txt'), 43, 'test input';
+{
+    say "Part two: ", day-four('4-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 9518
+: Took 2.26 seconds
