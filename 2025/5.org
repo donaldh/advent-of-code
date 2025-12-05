@@ -1,0 +1,96 @@
+#+title: 2025 AoC Day 5 – Cafeteria
+#+date: 2025-12-05
+#+tags[]: raku
+#+categories[]: code advent
+
+This is a solution to Advent of Code 2025 day 5, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/5]]
+
+** Part One
+
+#+begin_quote
+Process the database file from the new inventory management system. How many of the available
+ingredient IDs are fresh?
+#+end_quote
+
+#+begin_src raku :results output :tangle "day5p1.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-five($input) {
+    my ($ranges, $avail) = $input.IO.slurp.split("\n\n");
+    my @ranges = $ranges.lines>>.split('-').map(-> ($a, $b) { +$a..+$b });
+    my @avail = $avail.lines>>.Int;
+
+    +@avail.race.grep(-> $n { $n (elem) any(@ranges) });
+}
+
+is day-five('5-test.txt'), 3, 'test input';
+{
+    say "Part one: ", day-five('5-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part one: 896
+: Took 0.10 seconds
+
+
+** Part Two
+
+#+begin_quote
+Process the database file again. How many ingredient IDs are considered to be fresh according to
+the fresh ingredient ID ranges?
+#+end_quote
+
+#+begin_src raku :results output :tangle "day5p2.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-five($input) {
+    my ($ranges, $avail) = $input.IO.slurp.split("\n\n");
+    my @ranges = $ranges.lines>>.split('-').map(-> ($a, $b) { +$a..+$b });
+
+    my @coalesced;
+    RANGE:
+    for @ranges -> $r {
+        my $s = $r;
+        my $s1 = Nil;
+        for @coalesced -> $c {
+            if $s.max (elem) $c {
+                if $s.min (elem) $c {
+                    # subset
+                    next RANGE
+                }
+                # overlap below
+                $s = $s.min..$c.min - 1;
+            } elsif $s.min (elem) $c {
+                # overlap above
+                $s = $c.max + 1 .. $s.max;
+            } elsif $s.min < $c.min and $s.max > $c.max {
+                # superset
+                $s1 = $c.max + 1 .. $s.max;
+                $s = $s.min .. $c.min - 1;
+            }
+        }
+        @coalesced.push($s);
+        @coalesced.push($s1) if $s1;
+    }
+
+    [+] @coalesced>>.elems;
+}
+
+is day-five('5-test.txt'), 14, 'test input';
+{
+    say "Part two: ", day-five('5-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 346240317247002
+: Took 0.04 seconds
