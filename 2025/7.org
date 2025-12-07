@@ -1,0 +1,92 @@
+#+title: 2025 AoC Day 7 – Laboratories
+#+date: 2025-12-07
+#+tags[]: raku
+#+categories[]: code advent
+
+This is a solution to Advent of Code 2025 day 7, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/7]]
+
+** Part One
+
+#+begin_quote
+Analyze your manifold diagram. How many times will the beam be split?
+#+end_quote
+
+#+begin_src raku :results output
+use Test;
+
+sub day-seven($input) {
+    my @manifold = $input.IO.lines;
+    my $beams = @manifold[0].index('S').Set;
+
+    my $splits = 0;
+    for @manifold[1..*] -> $line {
+        my @splitters = $line.indices('^');
+        my @encounters = @splitters.grep(-> $s { $beams{$s} });
+        my @passes = $beams (-) @encounters.Set;
+        $splits += +@encounters;
+        $beams = @encounters.map(-> $e { $e - 1, $e + 1 }).flat.Set (+) @passes.Set;
+    }
+    $splits;
+}
+
+is day-seven('7-test.txt'), 21, 'test input';
+{
+    say day-seven('7-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: 1635
+: Took 0.03 seconds
+
+
+** Part Two
+
+#+begin_quote
+Apply the many-worlds interpretation of quantum tachyon splitting to your manifold diagram. In
+total, how many different timelines would a single tachyon particle end up on?
+#+end_quote
+
+Part one was messy and over-complicated. It's easier to tally the total splits as a
+sub-step of counting the accumulating timelines.
+
+#+begin_src raku :results output
+use Test;
+
+sub day-seven($input) {
+    my @manifold = $input.IO.lines;
+    my $start = @manifold[0].index('S');
+
+    my $splits = 0;
+    my %times = $start => 1;
+
+    for @manifold[1..*] -> $line {
+        my @splitters = $line.indices('^');
+        for @splitters -> $e {
+            $splits += 1 if %times{$e} > 0;
+            %times{$e - 1} += %times{$e};
+            %times{$e + 1} += %times{$e};
+            %times{$e} = 0;
+        }
+    }
+    $splits, [+] %times.values
+}
+
+is day-seven('7-test.txt'), (21, 40), 'test input';
+{
+    my ($s, $t) = day-seven('7-input.txt');
+    say "Part one {$s}; Part two {$t}";
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part one 1635; Part two 58097428661390
+: Took 0.01 seconds
