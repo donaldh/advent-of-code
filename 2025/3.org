@@ -2,7 +2,6 @@
 #+date: 2025-12-03
 #+tags[]: raku
 #+categories[]: code advent
-#+draft: true
 
 This is a solution to Advent of Code 2025 day 3, written in Raku.
 

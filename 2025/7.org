@@ -68,11 +68,11 @@ sub day-seven($input) {
 
     for @manifold[1..*] -> $line {
         my @splitters = $line.indices('^');
-        for @splitters -> $e {
-            $splits += 1 if %times{$e} > 0;
-            %times{$e - 1} += %times{$e};
-            %times{$e + 1} += %times{$e};
-            %times{$e} = 0;
+        for @splitters -> $s {
+            $splits += 1 if %times{$s} > 0;
+            %times{$s - 1} += %times{$s};
+            %times{$s + 1} += %times{$s};
+            %times{$s} = 0;
         }
     }
     $splits, [+] %times.values

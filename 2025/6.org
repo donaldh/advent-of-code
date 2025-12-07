@@ -12,6 +12,8 @@ This is a solution to Advent of Code 2025 day 6, written in Raku.
 ** Part One
 
 #+begin_quote
+Solve the problems on the math worksheet. What is the grand total found by adding together all
+of the answers to the individual problems?
 #+end_quote
 
 

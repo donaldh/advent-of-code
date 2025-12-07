@@ -19,7 +19,7 @@ twice), and 123123 (123 twice) would all be invalid IDs.
 ... What do you get if you add up all of the invalid IDs?
 #+end_quote
 
-#+begin_src raku :results output
+#+begin_src raku :results output :tangle "day2p1.raku" :shebang "#!/usr/bin/env raku"
 use Test;
 
 sub day-two($input) {
@@ -40,12 +40,16 @@ sub day-two($input) {
 }
 
 is day-two(slurp '2-test.txt'), 1227775554, 'test input';
-say "Part one: ", day-two(slurp '2-input.txt');
+{
+    say "Part one: ", day-two(slurp '2-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
 #+end_src
 
 #+RESULTS:
 : ok 1 - test input
 : Part one: 30599400849
+: Took 4.60 seconds
 
 
 ** Part Two
@@ -94,12 +98,12 @@ is day-two(slurp '2-test.txt'), 4174379265, 'test input';
 
 *** Take Two
 
-#+begin_src raku :results output
+#+begin_src raku :results output :tangle "day2p2f.raku" :shebang "#!/usr/bin/env raku"
 use Test;
 
 sub day-two($input) {
     my @invalid = $input.split(',')>>.split('-')>>.map(
-        -> $a, $b { +$a..+$b }).flat.grep(
+        -> $a, $b { +$a..+$b }).flat.race.grep(
         -> $i {
             my Str $s = ~$i;
             [or] (2..$s.chars).map(
@@ -122,4 +126,4 @@ is day-two(slurp '2-test.txt'), 4174379265, 'test input';
 #+RESULTS:
 : ok 1 - test input
 : Part two: 46270373595
-: Took 24.23 seconds
+: Took 5.52 seconds
