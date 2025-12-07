@@ -1,0 +1,112 @@
+#+title: 2025 AoC Day 6 – Trash Compactor
+#+date: 2025-12-06
+#+tags[]: raku
+#+categories[]: code advent
+
+This is a solution to Advent of Code 2025 day 6, written in Raku.
+
+# more
+
+[[https://adventofcode.com/2025/day/6]]
+
+** Part One
+
+#+begin_quote
+#+end_quote
+
+
+#+begin_src raku :results output
+use Test;
+
+sub day-six($input) {
+    my %values;
+
+    my @answers = gather {
+        for $input.IO.lines -> $line {
+            for $line.trim.split(/\s+/).kv -> $i, $v {
+                given $v {
+                    when '*' {
+                        take [*] %values{$i}.List;
+                    }
+                    when '+' {
+                        take [+] %values{$i}.List;
+                    }
+                    default {
+                        %values{$i}.push(+$v);
+                    }
+                }
+            }
+        }
+    }
+
+    [+] @answers;
+}
+
+is day-six('6-test.txt'), 4277556, 'test input';
+say "Part one: ", day-six('6-input.txt');
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part one: 5977759036837
+
+
+
+** Part Two
+
+#+begin_quote
+Cephalopod math is written right-to-left in columns. Each number is given in its own column,
+with the most significant digit at the top and the least significant digit at the bottom.
+...
+
+Solve the problems on the math worksheet again. What is the grand total found by adding together
+all of the answers to the individual problems?
+#+end_quote
+
+
+#+begin_src raku :results output
+use Test;
+
+sub day-six($input) {
+    my Str @transposed;
+    for $input.IO.lines>>.comb -> @line {
+        my $last = +@line - 1;
+        for @line.kv -> $i, $c {
+            @transposed[$last - $i] ~= $c;
+        }
+    }
+
+    my @answers = gather {
+        my @numbers;
+        for @transposed -> $line {
+            if $line.match(/^\s+$/) {
+                @numbers = [];
+                next;
+            }
+            @numbers.push($line.comb(/\d+/)[0].Int);
+            given $line {
+                when $line.ends-with('*') {
+                    take [*] @numbers;
+                }
+                when $line.ends-with('+') {
+                    take [+] @numbers;
+                }
+            }
+        }
+    }
+
+    [+] @answers;
+}
+
+is day-six('6-test.txt'), 3263827, 'test input';
+{
+    say "Part two: ", day-six('6-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 9630000828442
+: Took 0.09 seconds
