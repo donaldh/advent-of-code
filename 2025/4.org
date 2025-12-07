@@ -85,17 +85,15 @@ sub day-four($input) {
     my $rolls = @rolls.Set;
 
     loop {
-        my @accessible = gather {
-            $rolls.keys.map(
-                -> $r {
-                    my $adjacent = 0;
-                    for @offsets -> $o {
-                        $adjacent += 1 if $rolls{$r + $o}:exists;
-                        last if $adjacent > 3;
-                    }
-                    take $r if $adjacent < 4;
-                });
-        }
+        my @accessible = $rolls.keys.grep(
+            -> $r {
+                my int $adjacent = 0;
+                for @offsets -> $o {
+                    $adjacent += 1 if $rolls{$r + $o}:exists;
+                    last if $adjacent > 3;
+                }
+                $adjacent < 4;
+            });
 
         last if +@accessible == 0;
 
@@ -116,4 +114,69 @@ is day-four('4-test.txt'), 43, 'test input';
 #+RESULTS:
 : ok 1 - test input
 : Part two: 9518
-: Took 2.26 seconds
+: Took 2.06 seconds
+
+
+*** Take Two
+
+Profiling the solution showed that computing the identity key for Complex so frequently is
+costly. This revised solution caches all the adjacencies for each roll.
+
+#+begin_src raku :results output :tangle "day4p2bis.raku" :shebang "#!/usr/bin/env raku"
+use Test;
+
+sub day-four($input) {
+
+    my @rolls = gather {
+        $input.IO.lines.kv.map(
+            -> $y, $line {
+                $line.comb.kv.map(
+                    -> $x, $c {
+                        take Complex.new($x, $y) if $c eq '@';
+                    }).sink
+            })
+    }
+
+    my @offsets = (-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1);
+    @offsets .= map(-> ($dy, $dx) { Complex.new($dx, $dy) });
+
+    my int $total = 0;
+    my %rolls = @rolls.map(
+        -> $roll {
+            $roll.WHICH => @offsets.map(-> $o { ($roll + $o).WHICH })
+        });
+
+    loop {
+        my @accessible = gather {
+            for %rolls.kv -> $r, @offsets {
+                my int $adjacent = 0;
+                for @offsets -> $o {
+                    $adjacent += 1 if %rolls{$o}:exists;
+                    last if $adjacent > 3;
+                }
+                take $r if $adjacent < 4;
+            }
+        }
+
+        last if +@accessible == 0;
+
+        $total += +@accessible;
+        %rolls{@accessible}:delete;
+    }
+
+    $total
+}
+
+is day-four('4-test.txt'), 43, 'test input';
+{
+    say "Part two: ", day-four('4-input.txt');
+    say "Took " ~ (now - ENTER now).base(10,2) ~ " seconds";
+}
+#+end_src
+
+#+RESULTS:
+: ok 1 - test input
+: Part two: 9518
+: Took 1.76 seconds
